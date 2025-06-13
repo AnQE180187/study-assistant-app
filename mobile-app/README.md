@@ -1,88 +1,50 @@
-# Smart Study Assistant Mobile App
+# Welcome to your Expo app 👋
 
-A React Native mobile application for managing notes, flashcards, and AI-powered study assistance.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Features
+## Get started
 
-- Create and manage notes
-- Create and review flashcards with spaced repetition
-- AI-powered study assistance
-- Modern and intuitive UI
-- Authentication system
+1. Install dependencies
 
-## Prerequisites
+   ```bash
+   npm install
+   ```
 
-- Node.js (v14 or later)
-- npm or yarn
-- React Native development environment set up
-- Android Studio (for Android development)
-- Xcode (for iOS development, macOS only)
+2. Start the app
 
-## Installation
+   ```bash
+   npx expo start
+   ```
 
-1. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
+In the output, you'll find options to open the app in a
 
-2. Install iOS dependencies (macOS only):
-```bash
-cd ios && pod install && cd ..
-```
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-## Running the App
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-### Android
+## Get a fresh project
+
+When you're ready, run:
 
 ```bash
-npm run android
-# or
-yarn android
+npm run reset-project
 ```
 
-### iOS (macOS only)
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-```bash
-npm run ios
-# or
-yarn ios
-```
+## Learn more
 
-## Project Structure
+To learn more about developing your project with Expo, look at the following resources:
 
-```
-mobile-app/
-  ├── assets/         # Images, fonts, etc.
-  ├── components/     # Reusable UI components
-  ├── navigation/     # Navigation configuration
-  ├── screens/        # Screen components
-  │   ├── HomeScreen/
-  │   ├── NoteScreen/
-  │   ├── FlashcardScreen/
-  │   ├── AskAIScreen/
-  │   └── AuthScreen/
-  ├── services/       # API services
-  ├── constants/      # Theme, colors, etc.
-  ├── App.tsx         # Root component
-  └── package.json
-```
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Development
+## Join the community
 
-The app follows a modular structure with:
+Join our community of developers creating universal apps.
 
-- Screens: Main UI components organized by feature
-- Components: Reusable UI components
-- Services: API and business logic
-- Navigation: Screen navigation configuration
-- Constants: Theme and configuration values
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request 
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
