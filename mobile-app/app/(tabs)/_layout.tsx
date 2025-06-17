@@ -1,52 +1,36 @@
 import { Tabs } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.gray,
+        tabBarActiveTintColor: '#4A90E2',
+        tabBarInactiveTintColor: '#666',
         tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.lightGray,
+          borderTopWidth: 1,
+          borderTopColor: '#E0E0E0',
+          backgroundColor: '#fff',
         },
         headerShown: false,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <FontAwesome name="home" size={24} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="notes"
+        name="settings"
         options={{
-          title: 'Notes',
-          tabBarIcon: ({ color }) => <FontAwesome name="sticky-note" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="flashcards"
-        options={{
-          title: 'Flashcards',
-          tabBarIcon: ({ color }) => <FontAwesome name="book" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="ask-ai"
-        options={{
-          title: 'Ask AI',
-          tabBarIcon: ({ color }) => <FontAwesome name="question-circle" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="study-plan"
-        options={{
-          title: 'Study Plan',
-          tabBarIcon: ({ color }) => <FontAwesome name="calendar" size={24} color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

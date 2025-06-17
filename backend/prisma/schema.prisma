@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Prisma schema for MongoDB
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String       @unique
+  password      String
+  role          String       @default("student") // student, teacher, admin
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  notes         Note[]
+  flashcards    Flashcard[]
+  studyPlans    StudyPlan[]
+  progress      Progress[]
+}
+
+model Note {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  category    String
+  userId      String      @db.ObjectId
+  user        User        @relation(fields: [userId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  flashcards  Flashcard[]
+}
+
+model Flashcard {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  question  String
+  answer    String
+  noteId    String   @db.ObjectId
+  note      Note     @relation(fields: [noteId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model StudyPlan {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  goal        String
+  startDate   DateTime
+  endDate     DateTime
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Progress {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  testId      String   @db.ObjectId
+  completed   Boolean  @default(false)
+  score       Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+} 
