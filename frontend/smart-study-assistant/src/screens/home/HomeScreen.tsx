@@ -1,29 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Card, Text, ProgressBar, Button } from 'react-native-paper';
 
-const HomeScreen: React.FC = () => (
-  <View style={styles.container}>
-    <Text style={styles.title}>Welcome to Smart Study Assistant!</Text>
-    <Text style={styles.subtitle}>Tóm tắt tiến độ học, nhắc nhở, v.v.</Text>
-  </View>
-);
+const HomeScreen: React.FC = () => {
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.header}>Chào mừng bạn trở lại!</Text>
+      <Card style={styles.card}>
+        <Card.Title title="Kế hoạch học hôm nay" />
+        <Card.Content>
+          <Text>Toán: 2h - 3h</Text>
+          <Text>Tiếng Anh: 4h - 5h</Text>
+        </Card.Content>
+      </Card>
+      <Card style={styles.card}>
+        <Card.Title title="Tiến độ học tập" />
+        <Card.Content>
+          <Text>Hoàn thành 3/5 nhiệm vụ hôm nay</Text>
+          <ProgressBar progress={0.6} color="#4F8EF7" style={{ marginTop: 8 }} />
+        </Card.Content>
+      </Card>
+      <Card style={styles.card}>
+        <Card.Title title="Gợi ý từ AI" />
+        <Card.Content>
+          <Text>Hãy ôn lại flashcards Tiếng Anh để củng cố từ vựng!</Text>
+        </Card.Content>
+        <Card.Actions>
+          <Button mode="contained" onPress={() => {}}>Ôn ngay</Button>
+        </Card.Actions>
+      </Card>
+    </ScrollView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#F5F6FA',
+    padding: 16,
   },
-  title: {
+  header: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
+  card: {
+    marginBottom: 16,
   },
 });
 
-export default HomeScreen; 
+export default HomeScreen;
