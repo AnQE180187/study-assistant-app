@@ -32,7 +32,7 @@ const HomeScreen: React.FC = () => {
     </ScrollView>
   );
 };
-
+  
 const styles = StyleSheet.create({
   container: {
     flex: 1,
