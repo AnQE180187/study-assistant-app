@@ -32,7 +32,7 @@ const HomeScreen: React.FC = () => {
     </ScrollView>
   );
 };
-  
+import { StyleSheet } from 'react-native-paper';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
