@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text, Divider } from 'react-native-paper';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import CustomButton from '../../components/CustomButton';
+import { COLORS, SIZES } from '../../constants/themes';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -22,36 +23,38 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Đăng nhập</Text>
+      <Text style={styles.title}>Đăng nhập</Text>
       <TextInput
-        label="Email"
+        style={styles.input}
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
         keyboardType="email-address"
         autoCapitalize="none"
       />
       <TextInput
-        label="Mật khẩu"
+        style={styles.input}
+        placeholder="Mật khẩu"
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
         secureTextEntry
       />
-      <Button mode="contained" onPress={handleLogin} style={styles.button}>
-        Đăng nhập
-      </Button>
-      <Button onPress={() => navigation.navigate('ForgotPassword')} style={styles.link}>
-        Quên mật khẩu?
-      </Button>
-      <Text style={styles.hint}>Tài khoản mẫu: {DUMMY_USER.email} / {DUMMY_USER.password}</Text>
-      <Divider style={{ marginVertical: 16 }} />
-      <Button icon="google" mode="outlined" onPress={() => {}} style={styles.social}>
-        Đăng nhập với Google
-      </Button>
-      <Button icon="facebook" mode="outlined" onPress={() => {}} style={styles.social}>
-        Đăng nhập với Facebook
-      </Button>
+      <CustomButton title="Đăng nhập" onPress={handleLogin} />
+      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgot}>
+        <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+      </TouchableOpacity>
+      <Text style={styles.hint}>Tài khoản mẫu: user@email.com / 123456</Text>
+      <Text style={styles.or}>Hoặc đăng nhập bằng</Text>
+      <View style={styles.socialRow}>
+        <CustomButton title="Google" type="secondary" icon="logo-google" onPress={() => { }} />
+        <CustomButton title="Facebook" type="secondary" icon="logo-facebook" onPress={() => { }} />
+      </View>
+      <View style={styles.bottomRow}>
+        <Text style={styles.bottomText}>Chưa có tài khoản?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.register}>Đăng ký</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -60,33 +63,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#F5F6FA',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    padding: SIZES.padding,
   },
-  header: {
-    fontSize: 22,
+  title: {
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+    color: COLORS.primary,
+    marginBottom: 24,
   },
   input: {
-    marginBottom: 8,
+    width: '100%',
+    backgroundColor: COLORS.card,
+    borderRadius: SIZES.radius,
+    padding: 16,
+    fontSize: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  button: {
-    marginTop: 8,
-  },
-  link: {
-    marginTop: 4,
+  forgot: {
     alignSelf: 'flex-end',
+    marginBottom: 10,
   },
-  social: {
-    marginBottom: 8,
+  forgotText: {
+    color: COLORS.primary,
+    fontSize: 14,
   },
   hint: {
-    marginTop: 8,
-    color: '#888',
+    color: COLORS.textSecondary,
     fontSize: 13,
-    textAlign: 'center',
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  or: {
+    color: COLORS.textSecondary,
+    marginVertical: 10,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    marginTop: 24,
+  },
+  bottomText: {
+    color: COLORS.textSecondary,
+    marginRight: 6,
+  },
+  register: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
   },
 });
 

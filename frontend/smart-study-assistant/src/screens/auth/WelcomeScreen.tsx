@@ -1,133 +1,69 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { CompositeNavigationProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import React from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import CustomButton from '../../components/CustomButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, SIZES } from '../../constants/themes';
+import { Ionicons } from '@expo/vector-icons';
 
-type RootStackParamList = {
-  Auth: undefined;
-  App: undefined;
-};
-
-type AuthStackParamList = {
-  Welcome: undefined;
-  Login: undefined;
-  Register: undefined;
-};
-
-// Composite navigation type that includes both root and auth navigation
-type NavigationProp = CompositeNavigationProp<
-  StackNavigationProp<AuthStackParamList, "Welcome">,
-  StackNavigationProp<RootStackParamList>
->;
-
-const WelcomeScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-
-  const handleFlashcardPress = () => {
-    // Navigate to the main app (which will show the Flashcards tab)
-    navigation.navigate("App");
-  };
-
-  const handleLoginPress = () => {
-    navigation.navigate("Login");
-  };
-
-  const handleRegisterPress = () => {
-    navigation.navigate("Register");
-  };
-
+const WelcomeScreen = ({ navigation }: any) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Chào mừng đến với Smart Study Assistant!</Text>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.flashcardButton}
-          onPress={handleFlashcardPress}
-        >
-          <Text style={styles.flashcardButtonText}>🗂️ Test Flashcards</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
-          <Text style={styles.loginButtonText}>Đăng nhập</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.registerButton}
-          onPress={handleRegisterPress}
-        >
-          <Text style={styles.registerButtonText}>Đăng ký</Text>
-        </TouchableOpacity>
+    <LinearGradient colors={[COLORS.primaryLight, COLORS.primary]} style={styles.container}>
+      <View style={styles.logoWrap}>
+        {/* <Image source={require('../../assets/icon.png')} style={styles.logo} /> */}
+        <Text style={styles.slogan}>Smart Study Assistant</Text>
+        <Text style={styles.desc}>Học tập thông minh, hiệu quả hơn mỗi ngày!</Text>
       </View>
-    </View>
+      <View style={styles.btnWrap}>
+        <CustomButton title="Đăng nhập" onPress={() => navigation.navigate('Login')} />
+        <CustomButton title="Đăng ký" type="secondary" onPress={() => navigation.navigate('Register')} />
+        {/* <Text style={styles.or}>Hoặc đăng nhập bằng</Text>
+        <View style={styles.socialRow}>
+          <CustomButton title="Google" type="secondary" icon="logo-google" onPress={() => { }} />
+          <CustomButton title="Facebook" type="secondary" icon="logo-facebook" onPress={() => { }} />
+        </View> */}
+      </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F5F6FA",
-    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
+  logoWrap: {
+    alignItems: 'center',
     marginBottom: 40,
-    color: "#333",
   },
-  buttonContainer: {
-    width: "100%",
-    maxWidth: 300,
-    gap: 16,
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 16,
   },
-  flashcardButton: {
-    backgroundColor: "#FFA726",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+  slogan: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 8,
   },
-  flashcardButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+  desc: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    marginBottom: 12,
   },
-  loginButton: {
-    backgroundColor: "#2196F3",
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: "center",
+  btnWrap: {
+    width: '90%',
+    alignItems: 'center',
   },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+  or: {
+    color: COLORS.textSecondary,
+    marginVertical: 10,
   },
-  registerButton: {
-    backgroundColor: "transparent",
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#2196F3",
-  },
-  registerButtonText: {
-    color: "#2196F3",
-    fontSize: 16,
-    fontWeight: "600",
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
   },
 });
 
