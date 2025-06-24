@@ -1,15 +1,36 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface NoteCardProps {
   title: string;
-  content: string;
+  tag: string;
+  date: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ title, content }) => (
+const NoteCard: React.FC<NoteCardProps> = ({ title, tag, date, onEdit, onDelete }) => (
   <View style={styles.card}>
-    <Text style={styles.title}>{title}</Text>
-    <Text style={styles.content}>{content}</Text>
+    <View style={styles.header}>
+      <Text style={styles.title}>{title}</Text>
+      <View style={styles.actions}>
+        {onEdit && (
+          <TouchableOpacity onPress={onEdit} style={styles.iconBtn}>
+            <Ionicons name="create-outline" size={18} color="#4B7BEC" />
+          </TouchableOpacity>
+        )}
+        {onDelete && (
+          <TouchableOpacity onPress={onDelete} style={styles.iconBtn}>
+            <Ionicons name="trash-outline" size={18} color="#FF5252" />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+    <View style={styles.infoRow}>
+      <Text style={styles.tag}>{tag}</Text>
+      <Text style={styles.date}>{date}</Text>
+    </View>
   </View>
 );
 
@@ -24,15 +45,43 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   title: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 6,
+    flex: 1,
+    marginRight: 8,
   },
-  content: {
-    fontSize: 14,
-    color: '#444',
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBtn: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  tag: {
+    fontSize: 13,
+    color: '#4B7BEC',
+    backgroundColor: '#e6edfb',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  date: {
+    fontSize: 13,
+    color: '#888',
   },
 });
 
-export default NoteCard; 
+export default NoteCard;
