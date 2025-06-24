@@ -9,6 +9,7 @@ import FlashcardPracticeScreen from '../screens/flashcards/FlashcardPracticeScre
 const RootStack = createStackNavigator();
 
 const RootNavigator = () => {
+  //afdsaw
   const { isLoggedIn } = useAuth();
 
   return (

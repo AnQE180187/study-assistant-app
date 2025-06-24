@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import colors from "../constants/colors";
 import { getFlashcardStats } from "../services/flashcardService";
-
+//.
 const { width } = Dimensions.get("window");
 
 interface FlashcardStats {

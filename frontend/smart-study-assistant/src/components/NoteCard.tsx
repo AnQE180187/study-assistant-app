@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, SIZES, SHADOW } from '../constants/themes';
 import { Ionicons } from '@expo/vector-icons';
-
+//.
 type Props = {
   title: string;
   tag: string;

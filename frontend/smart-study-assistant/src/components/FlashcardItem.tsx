@@ -7,7 +7,7 @@ import {
   Animated,
 } from "react-native";
 import colors from "../constants/colors";
-
+//.
 interface FlashcardItemProps {
   question: string;
   answer: string;

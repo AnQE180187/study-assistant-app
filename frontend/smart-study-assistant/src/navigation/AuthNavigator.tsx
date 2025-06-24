@@ -15,5 +15,5 @@ const AuthNavigator = () => (
     <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'Quên mật khẩu' }} />
   </Stack.Navigator>
 );
-
+//for push
 export default AuthNavigator; 

@@ -4,7 +4,7 @@ import { COLORS, SIZES } from '../constants/themes';
 import { Ionicons } from '@expo/vector-icons';
 
 type Field = { label: string; value: string; onChange: (v: string) => void; multiline?: boolean };
-
+//for push
 type Props = {
   visible: boolean;
   type: 'add' | 'edit' | 'delete';

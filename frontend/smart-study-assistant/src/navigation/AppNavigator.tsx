@@ -22,5 +22,5 @@ const AppNavigator = () => (
     <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
 );
-
+//for push
 export default AppNavigator;

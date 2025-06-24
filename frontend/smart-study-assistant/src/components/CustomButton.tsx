@@ -9,7 +9,7 @@ type Props = {
   type?: 'primary' | 'secondary';
   icon?: string;
 };
-
+//.
 const CustomButton: React.FC<Props> = ({ title, onPress, type = 'primary', icon }) => {
   return (
     <TouchableOpacity
