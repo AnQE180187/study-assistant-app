@@ -1,78 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { COLORS, SIZES } from '../../constants/themes';
+import { Ionicons } from '@expo/vector-icons';
 
-const defaultAvatar = 'https://i.pravatar.cc/150?img=3';
-
-const ProfileScreen: React.FC = () => {
-  const [avatar, setAvatar] = useState<string>(defaultAvatar);
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState('Nguyễn Văn A');
-  const [email, setEmail] = useState('nguyenvana@email.com');
-  const [phone, setPhone] = useState('0123 456 789');
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setAvatar(result.assets[0].uri);
-    }
-  };
-
+const ProfileScreen = () => {
+  const [lang, setLang] = useState('en');
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={pickImage}>
-        <Image source={{ uri: avatar }} style={styles.avatar} />
-        <Text style={styles.avatarText}>Chọn ảnh đại diện</Text>
-      </TouchableOpacity>
-      <Text style={styles.title}>Thông tin cá nhân</Text>
-      <View style={styles.infoContainer}>
-        <Text style={styles.label}>Họ và tên:</Text>
-        {editing ? (
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Nhập họ tên"
-          />
-        ) : (
-          <Text style={styles.value}>{name}</Text>
-        )}
-        <Text style={styles.label}>Email:</Text>
-        {editing ? (
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Nhập email"
-            keyboardType="email-address"
-          />
-        ) : (
-          <Text style={styles.value}>{email}</Text>
-        )}
-        <Text style={styles.label}>Số điện thoại:</Text>
-        {editing ? (
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Nhập số điện thoại"
-            keyboardType="phone-pad"
-          />
-        ) : (
-          <Text style={styles.value}>{phone}</Text>
-        )}
+      <View style={styles.avatarWrap}>
+        {/* <Image source={require('../../assets/icon.png')} style={styles.avatar} /> */}
+        <Text style={styles.name}>Nguyễn Văn A</Text>
+        <Text style={styles.email}>user@email.com</Text>
+        <View style={styles.roleWrap}>
+          <Ionicons name="person-circle-outline" size={18} color={COLORS.primary} />
+          <Text style={styles.role}>Học sinh</Text>
+        </View>
       </View>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setEditing(!editing)}
-      >
-        <Text style={styles.buttonText}>{editing ? 'Lưu' : 'Chỉnh sửa'}</Text>
-      </TouchableOpacity>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Cài đặt</Text>
+        <View style={styles.row}>
+          <Ionicons name="language-outline" size={22} color={COLORS.primary} style={{ marginRight: 10 }} />
+          <Text style={styles.label}>Ngôn ngữ</Text>
+          <TouchableOpacity style={styles.langBtn} onPress={() => setLang(lang === 'en' ? 'vi' : 'en')}>
+            <Text style={styles.langText}>{lang === 'en' ? 'English' : 'Tiếng Việt'}</Text>
+            <Ionicons name="chevron-down" size={18} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.logoutBtn} onPress={() => { }}>
+          <Ionicons name="log-out-outline" size={22} color={COLORS.error} style={{ marginRight: 10 }} />
+          <Text style={styles.logoutText}>Đăng xuất</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -80,67 +38,90 @@ const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
+    padding: SIZES.padding,
+  },
+  avatarWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F5F6FA',
-    padding: 20,
+    marginBottom: 32,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: COLORS.primaryLight,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#4B7BEC',
   },
-  avatarText: {
-    color: '#4B7BEC',
-    textAlign: 'center',
-    marginBottom: 8,
-    fontSize: 14,
-  },
-  title: {
+  name: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 24,
+    color: COLORS.primary,
   },
-  infoContainer: {
-    width: '100%',
-    marginBottom: 32,
-    backgroundColor: '#fff',
-    borderRadius: 10,
+  email: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    marginBottom: 4,
+  },
+  roleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  role: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  section: {
+    backgroundColor: COLORS.card,
+    borderRadius: SIZES.radius,
     padding: 20,
-    elevation: 2,
+    ...{
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    color: COLORS.text,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
   },
   label: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 8,
+    color: COLORS.text,
+    fontSize: 15,
+    flex: 1,
   },
-  value: {
-    fontSize: 18,
-    color: '#222',
-    fontWeight: '500',
+  langBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
   },
-  input: {
-    fontSize: 18,
-    color: '#222',
-    fontWeight: '500',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    marginBottom: 4,
-    paddingVertical: 2,
-  },
-  button: {
-    backgroundColor: '#4B7BEC',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
+  langText: {
+    color: COLORS.primary,
     fontWeight: 'bold',
+    marginRight: 4,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  logoutText: {
+    color: COLORS.error,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
