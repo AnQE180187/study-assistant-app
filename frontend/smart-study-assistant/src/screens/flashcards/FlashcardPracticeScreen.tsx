@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,18 +6,19 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  Animated,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
-import colors from "../../constants/colors";
-import FlashcardItem from "../../components/FlashcardItem";
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SIZES } from '../../constants/themes';
 import {
   Flashcard,
   getFlashcardsByNote,
 } from "../../services/flashcardService";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 type FlashcardStackParamList = {
   FlashcardPractice: {
@@ -47,11 +48,14 @@ const FlashcardPracticeScreen: React.FC = () => {
   const { noteId, title, flashcards: routeFlashcards } = route.params;
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isShuffled, setIsShuffled] = useState(false);
+  const [showBack, setShowBack] = useState(false);
+  const [results, setResults] = useState<Record<string, 'correct' | 'wrong'>>({});
+  const [shuffled, setShuffled] = useState(false);
+  const flipAnim = useRef(new Animated.Value(0)).current;
+  const [flipDeg, setFlipDeg] = useState(0);
   const [completedCards, setCompletedCards] = useState<Set<string>>(new Set());
   const [ratings, setRatings] = useState<Record<string, DifficultyRating>>({});
   const [loading, setLoading] = useState(false);
-  const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
     if (routeFlashcards) {
@@ -74,53 +78,74 @@ const FlashcardPracticeScreen: React.FC = () => {
     }
   };
 
-  const shuffleArray = <T,>(array: T[]): T[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
+  const currentCard = flashcards[currentIndex];
+
+  // Flip card chuẩn Quizlet
+  const flipCard = () => {
+    Animated.timing(flipAnim, {
+      toValue: showBack ? 0 : 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => setShowBack(!showBack));
   };
 
-  const handleShuffle = () => {
-    const shuffled = shuffleArray(flashcards);
-    setFlashcards(shuffled);
-    setCurrentIndex(0);
-    setIsShuffled(!isShuffled);
+  const frontInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  const backInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['180deg', '360deg'],
+  });
+  const frontOpacity = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 0],
+  });
+  const backOpacity = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  // Progress
+  const progress = `${currentIndex + 1} / ${flashcards.length}`;
+
+  // Đánh giá đúng/sai
+  const handleResult = (type: 'correct' | 'wrong') => {
+    setResults({ ...results, [currentCard.id]: type });
+    if (currentIndex < flashcards.length - 1) {
+      setShowBack(false);
+      flipAnim.setValue(0);
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      showCompletionSummary();
+    }
+  };
+
+  // Chuyển thẻ
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setShowBack(false);
+      flipAnim.setValue(0);
+      setCurrentIndex(currentIndex - 1);
+    }
   };
   const handleNext = () => {
     if (currentIndex < flashcards.length - 1) {
+      setShowBack(false);
+      flipAnim.setValue(0);
       setCurrentIndex(currentIndex + 1);
-      setShowAnswer(false); // Reset answer view for next card
     }
   };
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setShowAnswer(false); // Reset answer view for previous card
-    }
-  };
-
-  const toggleAnswer = () => {
-    setShowAnswer(!showAnswer);
-  };
-  const handleRating = (rating: DifficultyRating) => {
-    const currentCard = flashcards[currentIndex];
-    setRatings((prev) => ({ ...prev, [currentCard.id]: rating }));
-    setCompletedCards((prev) => new Set([...prev, currentCard.id]));
-
-    // Auto advance to next card and reset answer view
-    setTimeout(() => {
-      if (currentIndex < flashcards.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-        setShowAnswer(false);
-      } else {
-        // Show completion screen
-        showCompletionSummary();
-      }
-    }, 500);
+  // Shuffle
+  const handleShuffle = () => {
+    setShuffled(true);
+    setShowBack(false);
+    flipAnim.setValue(0);
+    // Đảo mảng đơn giản (demo)
+    const shuffledCards = [...flashcards].sort(() => Math.random() - 0.5);
+    setFlashcards(shuffledCards);
+    setCurrentIndex(0);
   };
 
   const showCompletionSummary = () => {
@@ -146,7 +171,8 @@ const FlashcardPracticeScreen: React.FC = () => {
     setCurrentIndex(0);
     setCompletedCards(new Set());
     setRatings({});
-    setShowAnswer(false);
+    setShowBack(false);
+    flipAnim.setValue(0);
   };
 
   const handleExit = () => {
@@ -166,7 +192,7 @@ const FlashcardPracticeScreen: React.FC = () => {
   if (flashcards.length === 0) {
     return (
       <View style={styles.container}>
-        {" "}
+        
         <Text style={styles.emptyText}>
           Không có flashcard nào để luyện tập
         </Text>
@@ -188,12 +214,8 @@ const FlashcardPracticeScreen: React.FC = () => {
     );
   }
 
-  const currentCard = flashcards[currentIndex];
-  const progress = ((currentIndex + 1) / flashcards.length) * 100;
-  const isCompleted = completedCards.has(currentCard.id);
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleExit} style={styles.backButton}>
           <Text style={styles.backText}>←</Text>
@@ -201,83 +223,50 @@ const FlashcardPracticeScreen: React.FC = () => {
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-      </View>
-
-      {/* Main Card Container */}
-      <View style={styles.mainCardContainer}>
-        {/* Card */}
-        <View style={styles.practiceCard}>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardText}>
-              {showAnswer ? currentCard.answer : currentCard.question}
-            </Text>
-          </View>{" "}
-          {/* Navigation arrows */}
-          <View style={styles.cardNavigation}>
-            <TouchableOpacity
-              style={[
-                styles.navButton,
-                currentIndex === 0 && styles.navButtonDisabled,
-              ]}
-              onPress={handlePrevious}
-              disabled={currentIndex === 0}
-            >
-              <Text style={styles.navButtonText}>‹</Text>
-            </TouchableOpacity>
-            <Text style={styles.cardCounter}>
-              {currentIndex + 1}/{flashcards.length}
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.navButton,
-                currentIndex === flashcards.length - 1 &&
-                  styles.navButtonDisabled,
-              ]}
-              onPress={handleNext}
-              disabled={currentIndex === flashcards.length - 1}
-            >
-              <Text style={styles.navButtonText}>›</Text>
-            </TouchableOpacity>{" "}
-          </View>
-        </View>
-
-        {/* Show Answer Button */}
-        <TouchableOpacity
-          style={styles.showAnswerButton}
-          onPress={toggleAnswer}
-        >
-          <Text style={styles.showAnswerText}>
-            {showAnswer ? "Show Question" : "Show Answer"}
-          </Text>{" "}
+        <TouchableOpacity onPress={handleShuffle} style={styles.iconBtn}>
+          <Ionicons name="shuffle" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-
-        {/* Rating Buttons - Only show when answer is visible */}
-        {showAnswer && (
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingTitle}>How difficult was this card?</Text>
-            <View style={styles.ratingButtons}>
-              <TouchableOpacity
-                style={[styles.ratingButton, styles.easyButton]}
-                onPress={() => handleRating("easy")}
-              >
-                <Text style={styles.ratingButtonText}>Easy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.ratingButton, styles.mediumButton]}
-                onPress={() => handleRating("medium")}
-              >
-                <Text style={styles.ratingButtonText}>Medium</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.ratingButton, styles.hardButton]}
-                onPress={() => handleRating("hard")}
-              >
-                <Text style={styles.ratingButtonText}>Hard</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
       </View>
+      <View style={styles.cardWrap}>
+        <TouchableOpacity activeOpacity={0.9} onPress={flipCard}>
+          <View style={{ width: width * 0.8, height: height * 0.5 }}>
+            {/* Mặt trước */}
+            <Animated.View style={[styles.card, {
+              transform: [{ rotateY: frontInterpolate }],
+              opacity: frontOpacity,
+              zIndex: showBack ? 0 : 1,
+            }]}> 
+              <Text style={styles.cardText}>{currentCard.question}</Text>
+            </Animated.View>
+            {/* Mặt sau */}
+            <Animated.View style={[styles.card, styles.cardBack, {
+              transform: [{ rotateY: backInterpolate }],
+              opacity: backOpacity,
+              zIndex: showBack ? 1 : 0,
+            }]}> 
+              <Text style={styles.cardText}>{currentCard.answer}</Text>
+            </Animated.View>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.flipHint}>Chạm vào thẻ để lật</Text>
+      </View>
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.actionBtn} onPress={handlePrev} disabled={currentIndex === 0}>
+          <Ionicons name="arrow-back" size={22} color={currentIndex === 0 ? COLORS.border : COLORS.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.resultBtn, { backgroundColor: COLORS.success }]} onPress={() => handleResult('correct')}>
+          <Ionicons name="checkmark" size={22} color="#fff" />
+          <Text style={styles.resultText}>Đúng</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.resultBtn, { backgroundColor: COLORS.error }]} onPress={() => handleResult('wrong')}>
+          <Ionicons name="close" size={22} color="#fff" />
+          <Text style={styles.resultText}>Sai</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn} onPress={handleNext} disabled={currentIndex === flashcards.length - 1}>
+          <Ionicons name="arrow-forward" size={22} color={currentIndex === flashcards.length - 1 ? COLORS.border : COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.progress}>{progress}</Text>
     </View>
   );
 };
@@ -285,14 +274,15 @@ const FlashcardPracticeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: COLORS.background,
+    padding: SIZES.padding,
+    justifyContent: 'center',
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
   backButton: {
     marginRight: 16,
@@ -307,102 +297,76 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  mainCardContainer: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+  iconBtn: {
+    padding: 8,
   },
-  practiceCard: {
-    backgroundColor: "#4A5D23", // Dark green color like in design
-    borderRadius: 16,
-    padding: 40,
-    minHeight: 300,
-    justifyContent: "center",
-    marginBottom: 40,
+  cardWrap: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  cardContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardText: {
-    fontSize: 20,
-    color: "#fff",
-    textAlign: "center",
-    lineHeight: 28,
-    fontWeight: "500",
-  },
-  cardNavigation: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  navButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  navButtonDisabled: {
-    opacity: 0.3,
-  },
-  navButtonText: {
-    fontSize: 24,
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  cardCounter: {
-    fontSize: 16,
-    color: "#fff",
-    fontWeight: "500",
-  },
-  showAnswerButton: {
-    backgroundColor: "#4CAF50", // Green color like in design
-    paddingVertical: 16,
-    borderRadius: 25,
-    alignItems: "center",
-  },
-  showAnswerText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  ratingContainer: {
-    marginTop: 20,
+  card: {
+    width: width * 0.8,
+    height: height * 0.5,
+    backgroundColor: COLORS.card,
+    borderRadius: SIZES.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+    position: 'absolute',
+    backfaceVisibility: 'hidden',
     padding: 20,
   },
-  ratingTitle: {
+  cardBack: {
+    backgroundColor: COLORS.primaryLight,
+  },
+  cardText: {
+    fontSize: 26,
+    color: COLORS.text,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  flipHint: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    marginTop: 10,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  actionBtn: {
+    padding: 12,
+    borderRadius: 999,
+    backgroundColor: COLORS.card,
+    marginHorizontal: 8,
+  },
+  resultBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    marginHorizontal: 8,
+  },
+  resultText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    marginLeft: 6,
     fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 16,
   },
-  ratingButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  ratingButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginHorizontal: 4,
-  },
-  easyButton: {
-    backgroundColor: "#4CAF50",
-  },
-  mediumButton: {
-    backgroundColor: "#FF9800",
-  },
-  hardButton: {
-    backgroundColor: "#F44336",
-  },
-  ratingButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+  progress: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
   },
   loadingText: {
     fontSize: 16,
