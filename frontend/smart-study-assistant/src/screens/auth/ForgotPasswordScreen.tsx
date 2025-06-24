@@ -9,7 +9,7 @@ const ForgotPasswordScreen: React.FC = () => {
   const handleSubmit = () => {
     setSubmitted(true);
   };
-
+  //.
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Quên mật khẩu</Text>
