@@ -6,7 +6,7 @@ const RegisterScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  //.
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Đăng ký</Text>
@@ -31,14 +31,14 @@ const RegisterScreen: React.FC = () => {
         style={styles.input}
         secureTextEntry
       />
-      <Button mode="contained" onPress={() => {}} style={styles.button}>
+      <Button mode="contained" onPress={() => { }} style={styles.button}>
         Đăng ký
       </Button>
       <Divider style={{ marginVertical: 16 }} />
-      <Button icon="google" mode="outlined" onPress={() => {}} style={styles.social}>
+      <Button icon="google" mode="outlined" onPress={() => { }} style={styles.social}>
         Đăng ký với Google
       </Button>
-      <Button icon="facebook" mode="outlined" onPress={() => {}} style={styles.social}>
+      <Button icon="facebook" mode="outlined" onPress={() => { }} style={styles.social}>
         Đăng ký với Facebook
       </Button>
     </View>

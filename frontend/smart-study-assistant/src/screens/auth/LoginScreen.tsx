@@ -20,7 +20,7 @@ const LoginScreen: React.FC = () => {
       alert('Sai tài khoản hoặc mật khẩu!');
     }
   };
-
+  //.
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Đăng nhập</Text>

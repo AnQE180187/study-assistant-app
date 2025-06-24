@@ -21,11 +21,12 @@ const WelcomeScreen = ({ navigation }: any) => {
           <CustomButton title="Google" type="secondary" icon="logo-google" onPress={() => { }} />
           <CustomButton title="Facebook" type="secondary" icon="logo-facebook" onPress={() => { }} />
         </View> */}
+
       </View>
     </LinearGradient>
   );
 };
-
+//.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
