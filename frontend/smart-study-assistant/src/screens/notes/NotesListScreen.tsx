@@ -13,7 +13,7 @@ const initialNotes = [
 ];
 
 const tags = ['Tất cả', 'Toán', 'Vật lý', 'Hóa', 'Sinh'];
-
+ 
 const NotesListScreen = ({ navigation }: any) => {
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('Tất cả');
