@@ -1,186 +1,131 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  RefreshControl,
-  TextInput,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { Ionicons } from "@expo/vector-icons";
-import colors from "../../constants/colors";
-import DeckCard from "../../components/DeckCard";
-import CreateDeckModal from "../../components/CreateDeckModal";
-import {
-  getFlashcardDecks,
-  FlashcardDeck,
-} from "../../services/flashcardService";
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { COLORS, SIZES } from '../../constants/themes';
+import DeckCard from '../../components/DeckCard';
+import { Ionicons } from '@expo/vector-icons';
+import ModalCard from '../../components/ModalCard';
 
-type FlashcardStackParamList = {
-  FlashcardDecks: undefined;
-  FlashcardDeckDetail: { noteId: string; title: string };
-  FlashcardPractice: { noteId: string; title: string; flashcards: any[] };
-  CreateFlashcard: { noteId?: string; onCreated?: () => void };
-  NotesSelection: undefined;
-};
+const initialMyDecks = [
+  { name: 'Từ vựng IELTS', count: 3, isPublic: false, flashcards: [
+    { id: '1', question: 'What is IELTS?', answer: 'International English Language Testing System' },
+    { id: '2', question: 'IELTS band scale?', answer: '0-9' },
+    { id: '3', question: 'IELTS Academic or General?', answer: 'Both' },
+  ] },
+  { name: 'Công thức Vật lý', count: 2, isPublic: false, flashcards: [
+    { id: '1', question: 'F = ?', answer: 'ma' },
+    { id: '2', question: 'Công suất P = ?', answer: 'A/t' },
+  ] },
+];
+const initialPublicDecks = [
+  { name: 'Lịch sử Việt Nam', count: 2, isPublic: true, flashcards: [
+    { id: '1', question: 'Năm 1945 có sự kiện gì?', answer: 'Cách mạng tháng Tám' },
+    { id: '2', question: 'Bác Hồ đọc Tuyên ngôn độc lập ở đâu?', answer: 'Quảng trường Ba Đình' },
+  ] },
+  { name: 'Từ vựng TOEIC', count: 2, isPublic: true, flashcards: [
+    { id: '1', question: 'TOEIC là gì?', answer: 'Test of English for International Communication' },
+    { id: '2', question: 'TOEIC tối đa bao nhiêu điểm?', answer: '990' },
+  ] },
+];
 
-type NavigationProp = StackNavigationProp<FlashcardStackParamList>;
+const FlashcardDecksScreen = ({ navigation }: any) => {
+  const [tab, setTab] = useState<'my' | 'public'>('my');
+  const [myDecks, setMyDecks] = useState(initialMyDecks);
+  const [publicDecks, setPublicDecks] = useState(initialPublicDecks);
+  const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
+  const [temp, setTemp] = useState({ name: '', count: 0 });
 
-const FlashcardDecksScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const [decks, setDecks] = useState<FlashcardDeck[]>([]);
-  const [filteredDecks, setFilteredDecks] = useState<FlashcardDeck[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const loadDecks = async () => {
-    try {
-      const flashcardDecks = await getFlashcardDecks();
-      setDecks(flashcardDecks);
-      setFilteredDecks(flashcardDecks);
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải danh sách bộ flashcards");
-      console.error("Error loading decks:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const decks = tab === 'my' ? myDecks : publicDecks;
+  const setDecks = tab === 'my' ? setMyDecks : setPublicDecks;
+
+  // Modal handlers
+  const openAdd = () => {
+    setTemp({ name: '', count: 0 });
+    setModal({ type: 'add' });
   };
-  useEffect(() => {
-    loadDecks();
-  }, []);
-  // Search functionality
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim() === "") {
-      setFilteredDecks(decks);
-    } else {
-      const filtered = decks.filter(
-        (deck) =>
-          deck.noteTitle.toLowerCase().includes(query.toLowerCase()) ||
-          deck.category?.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredDecks(filtered);
-    }
+  const openEdit = (i: number) => {
+    setTemp({ name: decks[i].name, count: decks[i].count });
+    setModal({ type: 'edit', index: i });
   };
-  const handleDeckPress = (deck: FlashcardDeck) => {
-    // Navigate to deck details/edit screen
-    navigation.navigate("FlashcardDeckDetail", {
-      noteId: deck.noteId,
-      title: deck.noteTitle,
-    });
+  const openDelete = (i: number) => setModal({ type: 'delete', index: i });
+  const closeModal = () => setModal({ type: null });
+
+  // CRUD
+  const handleAdd = () => {
+    setDecks([{ name: temp.name, count: temp.count, isPublic: tab === 'public', flashcards: [] }, ...decks]);
+    closeModal();
+  };
+  const handleEdit = () => {
+    if (modal.index !== undefined) {
+      const newDecks = [...decks];
+      newDecks[modal.index] = { ...newDecks[modal.index], name: temp.name, count: temp.count };
+      setDecks(newDecks);
+    }
+    closeModal();
+  };
+  const handleDelete = () => {
+    if (modal.index !== undefined) {
+      setDecks(decks.filter((_, i) => i !== modal.index));
+    }
+    closeModal();
   };
 
-  const handlePractice = (deck: FlashcardDeck) => {
-    if (deck.totalCards === 0) {
-      Alert.alert("Thông báo", "Bộ flashcard này chưa có thẻ nào để luyện tập");
-      return;
-    }
-    // Navigate to practice screen
-    navigation.navigate("FlashcardPractice", {
-      noteId: deck.noteId,
-      title: deck.noteTitle,
+  // Chuyển sang màn học flashcard
+  const handlePractice = (deck: any) => {
+    navigation.navigate('FlashcardPractice', {
+      noteId: deck.name,
+      title: deck.name,
       flashcards: deck.flashcards,
     });
   };
-  const handleCreateNew = () => {
-    setShowCreateModal(true);
-  };
 
-  const handleCreateDeck = (name: string, description: string) => {
-    // TODO: Implement actual deck creation
-    console.log("Creating deck:", { name, description });
-    Alert.alert("Success", "Deck created successfully!");
-    loadDecks(); // Refresh the list
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadDecks();
-  };
-
-  const renderDeck = ({ item }: { item: FlashcardDeck }) => (
-    <DeckCard
-      title={item.noteTitle}
-      category={item.category}
-      totalCards={item.totalCards}
-      onPress={() => handleDeckPress(item)}
-      onPractice={() => handlePractice(item)}
-    />
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>Chưa có bộ flashcard nào</Text>
-      <Text style={styles.emptySubtitle}>
-        Tạo flashcard từ ghi chú của bạn để bắt đầu học tập hiệu quả
-      </Text>
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateNew}>
-        <Text style={styles.createButtonText}>Tạo flashcard đầu tiên</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Bộ Flashcards</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Đang tải...</Text>
-        </View>
-      </View>
-    );
-  }
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Flashcards</Text>
-      </View>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons
-            name="search"
-            size={20}
-            color="#999"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search your set of flashcards"
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-        </View>
+      <View style={styles.tabRow}>
+        <TouchableOpacity style={[styles.tabBtn, tab === 'my' && styles.tabBtnActive]} onPress={() => setTab('my')}>
+          <Text style={[styles.tabText, tab === 'my' && styles.tabTextActive]}>Bộ của tôi</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabBtn, tab === 'public' && styles.tabBtnActive]} onPress={() => setTab('public')}>
+          <Text style={[styles.tabText, tab === 'public' && styles.tabTextActive]}>Công khai</Text>
+        </TouchableOpacity>
       </View>
       <FlatList
-        data={filteredDecks}
-        renderItem={renderDeck}
-        keyExtractor={(item) => item.noteId}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={renderEmptyState}
+        data={decks}
+        keyExtractor={(_, i) => i.toString()}
+        renderItem={({ item, index }) => (
+          <DeckCard name={item.name} count={item.count} isPublic={item.isPublic} onPress={() => handlePractice(item)} />
+        )}
+        contentContainerStyle={{ paddingBottom: 80 }}
       />
-      {/* Floating Add Button */}
-      <TouchableOpacity style={styles.floatingButton} onPress={handleCreateNew}>
-        <Ionicons name="add" size={30} color="#fff" />
+      <TouchableOpacity style={styles.fab} onPress={openAdd}>
+        <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
-      {/* Create Deck Modal */}
-      <CreateDeckModal
-        visible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateDeck}
+      {/* ModalCard cho Thêm/Sửa/Xóa */}
+      <ModalCard
+        visible={modal.type === 'add'}
+        type="add"
+        title="Thêm bộ flashcard"
+        fields={[
+          { label: 'Tên bộ', value: temp.name, onChange: v => setTemp(t => ({ ...t, name: v })) },
+        ]}
+        onSubmit={handleAdd}
+        onCancel={closeModal}
+      />
+      <ModalCard
+        visible={modal.type === 'edit'}
+        type="edit"
+        title="Sửa bộ flashcard"
+        fields={[
+          { label: 'Tên bộ', value: temp.name, onChange: v => setTemp(t => ({ ...t, name: v })) },
+        ]}
+        onSubmit={handleEdit}
+        onCancel={closeModal}
+      />
+      <ModalCard
+        visible={modal.type === 'delete'}
+        type="delete"
+        title="Xóa bộ flashcard"
+        onSubmit={handleDelete}
+        onCancel={closeModal}
       />
     </View>
   );
@@ -189,141 +134,50 @@ const FlashcardDecksScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: COLORS.background,
+    padding: SIZES.padding,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+  tabRow: {
+    flexDirection: 'row',
+    marginBottom: 18,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 999,
+    padding: 4,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
+  tabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 999,
   },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+  tabBtnActive: {
+    backgroundColor: COLORS.primary,
   },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+  tabText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  tabTextActive: {
+    color: '#fff',
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 32,
+    backgroundColor: COLORS.primary,
+    borderRadius: 999,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...{
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  searchButtonText: {
-    fontSize: 20,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  listContainer: {
-    padding: 20,
-    paddingTop: 0,
-    paddingBottom: 100,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#666",
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-    paddingVertical: 60,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  createButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  createButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  floatingButton: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#FFA726",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
   },
 });
 
