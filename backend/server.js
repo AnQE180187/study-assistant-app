@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 // Import routes
 const userRoutes = require('./routes/userRoutes');
 const noteRoutes = require('./routes/noteRoutes');
+const deckRoutes = require('./routes/deckRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/decks', deckRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

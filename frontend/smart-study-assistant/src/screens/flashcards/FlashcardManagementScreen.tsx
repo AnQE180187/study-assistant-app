@@ -6,102 +6,151 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-
-interface Flashcard {
-  id: string;
-  question: string;
-  answer: string;
-}
+import ModalCard from '../../components/ModalCard';
+import { getFlashcardsByDeck, createFlashcard, updateFlashcard, deleteFlashcard, Flashcard } from '../../services/flashcardService';
+import { COLORS } from '../../constants/themes';
 
 type FlashcardStackParamList = {
-  FlashcardManagement: { noteId: string; title: string };
-  CreateFlashcard: { noteId?: string; onCreated?: () => void };
+  FlashcardManagement: { deckId: string; title: string };
 };
-
-type NavigationProp = StackNavigationProp<
-  FlashcardStackParamList,
-  "FlashcardManagement"
->;
+type NavigationProp = StackNavigationProp<FlashcardStackParamList, "FlashcardManagement">;
 type RouteProps = RouteProp<FlashcardStackParamList, "FlashcardManagement">;
 
 const FlashcardManagementScreen: React.FC = () => {
   const route = useRoute<RouteProps>();
   const navigation = useNavigation<NavigationProp>();
-  const { noteId, title } = route.params;
+  const { deckId, title } = route.params;
 
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([
-    {
-      id: "1",
-      question: "What is React Native?",
-      answer: "A framework for building mobile apps",
-    },
-    {
-      id: "2",
-      question: "What is TypeScript?",
-      answer: "A typed superset of JavaScript",
-    },
-  ]);
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
+  const [temp, setTemp] = useState<{ term: string; definition: string }>({ term: '', definition: '' });
 
-  const handleAddFlashcard = () => {
-    navigation.navigate("CreateFlashcard", {
-      noteId,
-      onCreated: () => {
-        // Refresh flashcards after creation
-        loadFlashcards();
-      },
-    });
+  useEffect(() => {
+    fetchFlashcards();
+    // eslint-disable-next-line
+  }, [deckId]);
+
+  const fetchFlashcards = async () => {
+    setLoading(true);
+    try {
+      const data = await getFlashcardsByDeck(deckId);
+      setFlashcards(data);
+    } catch (e) {}
+    setLoading(false);
   };
 
-  const loadFlashcards = () => {
-    // TODO: Load flashcards from service
-    console.log("Loading flashcards for noteId:", noteId);
+  const openAdd = () => {
+    setTemp({ term: '', definition: '' });
+    setModal({ type: 'add' });
+  };
+  const openEdit = (i: number) => {
+    setTemp({ term: flashcards[i].term, definition: flashcards[i].definition });
+    setModal({ type: 'edit', index: i });
+  };
+  const openDelete = (i: number) => setModal({ type: 'delete', index: i });
+  const closeModal = () => setModal({ type: null });
+
+  const handleAdd = async () => {
+    try {
+      await createFlashcard(deckId, { term: temp.term, definition: temp.definition });
+      await fetchFlashcards();
+      closeModal();
+    } catch (e) {}
+  };
+  const handleEdit = async () => {
+    if (modal.index !== undefined && flashcards[modal.index]) {
+      try {
+        await updateFlashcard(flashcards[modal.index].id, { term: temp.term, definition: temp.definition });
+        await fetchFlashcards();
+      } catch (e) {}
+    }
+    closeModal();
+  };
+  const handleDelete = async () => {
+    if (modal.index !== undefined && flashcards[modal.index]) {
+      try {
+        await deleteFlashcard(flashcards[modal.index].id);
+        await fetchFlashcards();
+      } catch (e) {}
+    }
+    closeModal();
   };
 
-  const handleFlashcardPress = (flashcard: Flashcard) => {
-    // TODO: Navigate to edit flashcard screen
-    Alert.alert("Edit Flashcard", `Edit: ${flashcard.question}`);
-  };
-
-  const renderFlashcard = ({ item }: { item: Flashcard }) => (
+  const renderFlashcard = ({ item, index }: { item: Flashcard; index: number }) => (
     <TouchableOpacity
       style={styles.flashcardItem}
-      onPress={() => handleFlashcardPress(item)}
+      onPress={() => openEdit(index)}
+      onLongPress={() => openDelete(index)}
     >
-      <Text style={styles.flashcardText} numberOfLines={2}>
-        {item.question}
-      </Text>
+      <Text style={styles.term}>{item.term}</Text>
+      <Text style={styles.definition}>{item.definition}</Text>
+      <View style={styles.actionRow}>
+        <TouchableOpacity onPress={() => openEdit(index)}>
+          <Ionicons name="create-outline" size={20} color={COLORS.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => openDelete(index)} style={{ marginLeft: 16 }}>
+          <Ionicons name="trash-outline" size={20} color={COLORS.error || 'red'} />
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
       </View>
-
-      {/* Add Flashcard Button */}
-      <TouchableOpacity style={styles.addButton} onPress={handleAddFlashcard}>
-        <Text style={styles.addButtonText}>ADD FLASHCARD</Text>
+      <TouchableOpacity style={styles.addButton} onPress={openAdd}>
+        <Text style={styles.addButtonText}>THÊM FLASHCARD</Text>
       </TouchableOpacity>
-
-      {/* Flashcards List */}
-      <FlatList
-        data={flashcards}
-        renderItem={renderFlashcard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
+      {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} /> : (
+        <FlatList
+          data={flashcards}
+          renderItem={renderFlashcard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+      {/* Modal cho Thêm/Sửa/Xóa flashcard */}
+      <ModalCard
+        visible={modal.type === 'add'}
+        type="add"
+        title="Thêm flashcard"
+        fields={[
+          { label: 'Thuật ngữ', value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
+          { label: 'Định nghĩa', value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
+        ]}
+        onSubmit={handleAdd}
+        onCancel={closeModal}
+      />
+      <ModalCard
+        visible={modal.type === 'edit'}
+        type="edit"
+        title="Sửa flashcard"
+        fields={[
+          { label: 'Thuật ngữ', value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
+          { label: 'Định nghĩa', value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
+        ]}
+        onSubmit={handleEdit}
+        onCancel={closeModal}
+      />
+      <ModalCard
+        visible={modal.type === 'delete'}
+        type="delete"
+        title="Xóa flashcard"
+        onSubmit={handleDelete}
+        onCancel={closeModal}
       />
     </View>
   );
@@ -127,7 +176,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   addButton: {
-    backgroundColor: "#333",
+    backgroundColor: COLORS.primary,
     marginHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 25,
@@ -144,19 +193,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   flashcardItem: {
-    backgroundColor: "#FFE082", // Yellow color like in design
-    paddingVertical: 24,
+    backgroundColor: COLORS.card,
+    paddingVertical: 18,
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 16,
     minHeight: 80,
     justifyContent: "center",
+    ...{
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 2,
+    },
   },
-  flashcardText: {
+  term: {
     fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
-    textAlign: "center",
+    color: COLORS.primary,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  definition: {
+    fontSize: 15,
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
 });
 

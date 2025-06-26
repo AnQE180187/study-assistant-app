@@ -1,12 +1,30 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { TextInput, Button, Text, Divider } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../../contexts/AuthContext';
+import * as authService from '../../services/authService';
 
 const RegisterScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  //.
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+  const { login } = useAuth();
+
+  const handleRegister = async () => {
+    setLoading(true);
+    try {
+      const res = await authService.register(name, email, password);
+      await login(email, password); // tự động đăng nhập sau khi đăng ký
+    } catch (err: any) {
+      Alert.alert('Đăng ký thất bại', err?.response?.data?.message || 'Có lỗi xảy ra!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Đăng ký</Text>
@@ -31,7 +49,7 @@ const RegisterScreen: React.FC = () => {
         style={styles.input}
         secureTextEntry
       />
-      <Button mode="contained" onPress={() => { }} style={styles.button}>
+      <Button mode="contained" onPress={handleRegister} style={styles.button} loading={loading} disabled={loading}>
         Đăng ký
       </Button>
       <Divider style={{ marginVertical: 16 }} />

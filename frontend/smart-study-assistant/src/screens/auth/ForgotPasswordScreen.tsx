@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
+import * as authService from '../../services/authService';
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await authService.forgotPassword(email);
+      setSubmitted(true);
+    } catch (err: any) {
+      Alert.alert('Lỗi', err?.response?.data?.message || 'Không thể gửi email!');
+    } finally {
+      setLoading(false);
+    }
   };
-  //.
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Quên mật khẩu</Text>
@@ -24,10 +34,10 @@ const ForgotPasswordScreen: React.FC = () => {
       <HelperText type="info" visible={true}>
         Nhập email để nhận hướng dẫn đặt lại mật khẩu.
       </HelperText>
-      <Button mode="contained" onPress={handleSubmit} style={styles.button}>
+      <Button mode="contained" onPress={handleSubmit} style={styles.button} loading={loading} disabled={loading}>
         Gửi
       </Button>
-      {submitted && <Text style={styles.success}>Đã gửi email hướng dẫn!</Text>}
+      {submitted && <Text style={styles.success}>Đã gửi email hướng dẫn! (Kiểm tra console backend)</Text>}
     </View>
   );
 };

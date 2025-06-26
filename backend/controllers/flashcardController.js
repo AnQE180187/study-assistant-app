@@ -1,14 +1,15 @@
 const prisma = require('../config/prismaClient');
 
-// @desc    Create a new flashcard
-// @route   POST /api/flashcards
+// @desc    Create a new flashcard in a deck
+// @route   POST /api/decks/:deckId/flashcards
 // @access  Private
 const createFlashcard = async (req, res) => {
   try {
-    const { question, answer, noteId, isPublic } = req.body;
+    const { term, definition } = req.body;
+    const { deckId } = req.params;
     const userId = req.user.id;
     const flashcard = await prisma.flashcard.create({
-      data: { question, answer, noteId, userId, isPublic: !!isPublic },
+      data: { term, definition, deckId, userId },
     });
     res.status(201).json(flashcard);
   } catch (error) {
@@ -16,14 +17,15 @@ const createFlashcard = async (req, res) => {
   }
 };
 
-// @desc    Get all flashcards for a user
-// @route   GET /api/flashcards
+// @desc    Get all flashcards in a deck
+// @route   GET /api/decks/:deckId/flashcards
 // @access  Private
-const getFlashcards = async (req, res) => {
+const getFlashcardsByDeck = async (req, res) => {
   try {
+    const { deckId } = req.params;
     const userId = req.user.id;
     const flashcards = await prisma.flashcard.findMany({
-      where: { userId },
+      where: { deckId, userId },
       orderBy: { createdAt: 'desc' },
     });
     res.json(flashcards);
@@ -53,13 +55,13 @@ const getFlashcardById = async (req, res) => {
 // @access  Private
 const updateFlashcard = async (req, res) => {
   try {
-    const { question, answer, isPublic } = req.body;
+    const { term, definition } = req.body;
     const flashcard = await prisma.flashcard.findUnique({ where: { id: req.params.id } });
     if (!flashcard) return res.status(404).json({ message: 'Flashcard not found' });
     if (flashcard.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
     const updatedFlashcard = await prisma.flashcard.update({
       where: { id: req.params.id },
-      data: { question, answer, isPublic },
+      data: { term, definition },
     });
     res.json(updatedFlashcard);
   } catch (error) {
@@ -125,8 +127,8 @@ const searchPublicFlashcards = async (req, res) => {
       where: {
         isPublic: true,
         OR: [
-          { question: { contains: query, mode: 'insensitive' } },
-          { answer: { contains: query, mode: 'insensitive' } },
+          { term: { contains: query, mode: 'insensitive' } },
+          { definition: { contains: query, mode: 'insensitive' } },
         ],
       },
       orderBy: { createdAt: 'desc' },
@@ -139,7 +141,7 @@ const searchPublicFlashcards = async (req, res) => {
 
 module.exports = {
   createFlashcard,
-  getFlashcards,
+  getFlashcardsByDeck,
   getFlashcardById,
   updateFlashcard,
   deleteFlashcard,

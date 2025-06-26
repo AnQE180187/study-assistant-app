@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { COLORS, SIZES } from '../constants/themes';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,9 +12,12 @@ type Props = {
   fields?: Field[];
   onSubmit: () => void;
   onCancel: () => void;
+  extraContent?: ReactNode;
+  isPublic?: boolean;
+  onTogglePublic?: () => void;
 };
 
-const ModalCard: React.FC<Props> = ({ visible, type, title, fields = [], onSubmit, onCancel }) => {
+const ModalCard: React.FC<Props> = ({ visible, type, title, fields = [], onSubmit, onCancel, extraContent, isPublic, onTogglePublic }) => {
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel}>
       <View style={styles.overlay}>
@@ -39,6 +42,15 @@ const ModalCard: React.FC<Props> = ({ visible, type, title, fields = [], onSubmi
               />
             </View>
           ))}
+          {/* Hiển thị extraContent nếu có */}
+          {type !== 'delete' && extraContent}
+          {/* Toggle public nếu có */}
+          {type !== 'delete' && typeof isPublic === 'boolean' && onTogglePublic && (
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }} onPress={onTogglePublic}>
+              <Ionicons name={isPublic ? 'earth' : 'lock-closed'} size={20} color={COLORS.primary} style={{ marginRight: 6 }} />
+              <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}>{isPublic ? 'Công khai' : 'Riêng tư'}</Text>
+            </TouchableOpacity>
+          )}
           {type === 'delete' && (
             <Text style={styles.deleteText}>Bạn có chắc chắn muốn xóa không?</Text>
           )}

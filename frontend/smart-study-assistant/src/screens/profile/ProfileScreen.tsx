@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { COLORS, SIZES } from '../../constants/themes';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProfileScreen = () => {
   const [lang, setLang] = useState('en');
+  const { user, logout } = useAuth();
   return (
     <View style={styles.container}>
       <View style={styles.avatarWrap}>
         {/* <Image source={require('../../assets/icon.png')} style={styles.avatar} /> */}
-        <Text style={styles.name}>Nguyễn Văn A</Text>
-        <Text style={styles.email}>user@email.com</Text>
+        <Text style={styles.name}>{user?.name || 'Người dùng'}</Text>
+        <Text style={styles.email}>{user?.email || ''}</Text>
         <View style={styles.roleWrap}>
           <Ionicons name="person-circle-outline" size={18} color={COLORS.primary} />
-          <Text style={styles.role}>Học sinh</Text>
+          <Text style={styles.role}>{user?.role === 'teacher' ? 'Giáo viên' : user?.role === 'admin' ? 'Quản trị' : 'Học sinh'}</Text>
         </View>
       </View>
       <View style={styles.section}>
@@ -26,7 +28,7 @@ const ProfileScreen = () => {
             <Ionicons name="chevron-down" size={18} color={COLORS.textSecondary} />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={() => { }}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <Ionicons name="log-out-outline" size={22} color={COLORS.error} style={{ marginRight: 10 }} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>

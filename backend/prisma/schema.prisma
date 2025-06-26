@@ -24,6 +24,9 @@ model User {
   flashcards    Flashcard[]
   studyPlans    StudyPlan[]
   progress      Progress[]
+  decks         Deck[]
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
 }
 
 model Note {
@@ -35,18 +38,31 @@ model Note {
   user        User        @relation(fields: [userId], references: [id])
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+}
+
+model Deck {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  tags        String[]
+  userId      String      @db.ObjectId
+  user        User        @relation(fields: [userId], references: [id])
+  isPublic    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   flashcards  Flashcard[]
 }
 
 model Flashcard {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  question  String
-  answer    String
-  noteId    String   @db.ObjectId
-  note      Note     @relation(fields: [noteId], references: [id])
-  userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  term        String
+  definition  String
+  deckId      String   @db.ObjectId
+  deck        Deck     @relation(fields: [deckId], references: [id])
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model StudyPlan {

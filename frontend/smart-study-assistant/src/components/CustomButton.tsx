@@ -8,19 +8,21 @@ type Props = {
   onPress: () => void;
   type?: 'primary' | 'secondary';
   icon?: string;
+  disabled?: boolean;
 };
 //.
-const CustomButton: React.FC<Props> = ({ title, onPress, type = 'primary', icon }) => {
+const CustomButton: React.FC<Props> = ({ title, onPress, type = 'primary', icon, disabled }) => {
   return (
     <TouchableOpacity
-      style={[styles.button, type === 'secondary' && styles.secondary]}
-      onPress={onPress}
+      style={[styles.button, type === 'secondary' && styles.secondary, disabled && styles.disabled]}
+      onPress={disabled ? undefined : onPress}
       activeOpacity={0.8}
+      disabled={disabled}
     >
       {icon && (
         <Ionicons name={icon as any} size={20} color={type === 'primary' ? '#fff' : COLORS.primary} style={{ marginRight: 8 }} />
       )}
-      <Text style={[styles.text, type === 'secondary' && styles.textSecondary]}>{title}</Text>
+      <Text style={[styles.text, type === 'secondary' && styles.textSecondary, disabled && styles.textDisabled]}>{title}</Text>
     </TouchableOpacity>
   );
 };
@@ -41,6 +43,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
+  disabled: {
+    backgroundColor: COLORS.border,
+    opacity: 0.7,
+  },
   text: {
     color: '#fff',
     fontSize: 16,
@@ -48,6 +54,9 @@ const styles = StyleSheet.create({
   },
   textSecondary: {
     color: COLORS.primary,
+  },
+  textDisabled: {
+    color: COLORS.textSecondary,
   },
 });
 

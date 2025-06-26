@@ -3,16 +3,11 @@ import api from "./api";
 // Types based on Prisma schema
 export interface Flashcard {
   id: string;
-  question: string;
-  answer: string;
-  noteId: string;
-  userId: string;
+  term: string;
+  definition: string;
+  deckId: string;
   createdAt: string;
-  note?: {
-    id: string;
-    title: string;
-    category: string;
-  };
+  updatedAt: string;
 }
 
 export interface FlashcardDeck {
@@ -33,181 +28,116 @@ export interface CreateFlashcardData {
 const mockFlashcards: Flashcard[] = [
   {
     id: "1",
-    question: "What is React Native?",
-    answer: "React Native is a framework for building mobile apps using React",
-    noteId: "note1",
-    userId: "user1",
+    term: "What is React Native?",
+    definition: "React Native is a framework for building mobile apps using React",
+    deckId: "deck1",
     createdAt: "2024-01-15T10:00:00Z",
-    note: {
-      id: "note1",
-      title: "React Native Basics",
-      category: "Programming",
-    },
+    updatedAt: "2024-01-15T10:00:00Z",
   },
   {
     id: "2",
-    question: "What is TypeScript?",
-    answer: "TypeScript is a superset of JavaScript that adds static typing",
-    noteId: "note1",
-    userId: "user1",
+    term: "What is TypeScript?",
+    definition: "TypeScript is a superset of JavaScript that adds static typing",
+    deckId: "deck1",
     createdAt: "2024-01-15T10:05:00Z",
-    note: {
-      id: "note1",
-      title: "React Native Basics",
-      category: "Programming",
-    },
+    updatedAt: "2024-01-15T10:05:00Z",
   },
   {
     id: "3",
-    question: "What is JSX?",
-    answer:
+    term: "What is JSX?",
+    definition:
       "JSX is a syntax extension for JavaScript that allows you to write HTML-like code in React",
-    noteId: "note1",
-    userId: "user1",
+    deckId: "deck1",
     createdAt: "2024-01-15T10:10:00Z",
-    note: {
-      id: "note1",
-      title: "React Native Basics",
-      category: "Programming",
-    },
+    updatedAt: "2024-01-15T10:10:00Z",
   },
   {
     id: "4",
-    question: "What is Prisma?",
-    answer: "Prisma is a modern database toolkit for TypeScript and Node.js",
-    noteId: "note2",
-    userId: "user1",
+    term: "What is Prisma?",
+    definition: "Prisma is a modern database toolkit for TypeScript and Node.js",
+    deckId: "deck2",
     createdAt: "2024-01-15T11:00:00Z",
-    note: {
-      id: "note2",
-      title: "Database Technologies",
-      category: "Backend",
-    },
+    updatedAt: "2024-01-15T11:00:00Z",
   },
   {
     id: "5",
-    question: "What is MongoDB?",
-    answer: "MongoDB is a NoSQL document database",
-    noteId: "note2",
-    userId: "user1",
+    term: "What is MongoDB?",
+    definition: "MongoDB is a NoSQL document database",
+    deckId: "deck2",
     createdAt: "2024-01-15T11:05:00Z",
-    note: {
-      id: "note2",
-      title: "Database Technologies",
-      category: "Backend",
-    },
+    updatedAt: "2024-01-15T11:05:00Z",
   },
   {
     id: "6",
-    question: "What is an ORM?",
-    answer:
+    term: "What is an ORM?",
+    definition:
       "Object-Relational Mapping (ORM) is a technique that lets you query and manipulate data from a database using an object-oriented paradigm",
-    noteId: "note2",
-    userId: "user1",
+    deckId: "deck2",
     createdAt: "2024-01-15T11:10:00Z",
-    note: {
-      id: "note2",
-      title: "Database Technologies",
-      category: "Backend",
-    },
+    updatedAt: "2024-01-15T11:10:00Z",
   },
   {
     id: "7",
-    question: "What is Machine Learning?",
-    answer:
+    term: "What is Machine Learning?",
+    definition:
       "Machine Learning is a subset of AI that enables computers to learn and make decisions from data without being explicitly programmed",
-    noteId: "note3",
-    userId: "user1",
+    deckId: "deck3",
     createdAt: "2024-01-16T09:00:00Z",
-    note: {
-      id: "note3",
-      title: "AI & Machine Learning",
-      category: "Data Science",
-    },
+    updatedAt: "2024-01-16T09:00:00Z",
   },
   {
     id: "8",
-    question: "What is Deep Learning?",
-    answer:
+    term: "What is Deep Learning?",
+    definition:
       "Deep Learning is a subset of machine learning that uses neural networks with multiple layers to model and understand complex patterns",
-    noteId: "note3",
-    userId: "user1",
+    deckId: "deck3",
     createdAt: "2024-01-16T09:05:00Z",
-    note: {
-      id: "note3",
-      title: "AI & Machine Learning",
-      category: "Data Science",
-    },
+    updatedAt: "2024-01-16T09:05:00Z",
   },
   {
     id: "9",
-    question: "What is a Neural Network?",
-    answer:
+    term: "What is a Neural Network?",
+    definition:
       "A neural network is a computing system inspired by biological neural networks, consisting of interconnected nodes (neurons) that process information",
-    noteId: "note3",
-    userId: "user1",
+    deckId: "deck3",
     createdAt: "2024-01-16T09:10:00Z",
-    note: {
-      id: "note3",
-      title: "AI & Machine Learning",
-      category: "Data Science",
-    },
+    updatedAt: "2024-01-16T09:10:00Z",
   },
   {
     id: "10",
-    question: "What is Redux?",
-    answer:
+    term: "What is Redux?",
+    definition:
       "Redux is a predictable state container for JavaScript apps, commonly used with React for managing application state",
-    noteId: "note4",
-    userId: "user1",
+    deckId: "deck4",
     createdAt: "2024-01-17T14:00:00Z",
-    note: {
-      id: "note4",
-      title: "State Management",
-      category: "Frontend",
-    },
+    updatedAt: "2024-01-17T14:00:00Z",
   },
   {
     id: "11",
-    question: "What is Context API?",
-    answer:
+    term: "What is Context API?",
+    definition:
       "Context API is a React feature that allows you to share state between components without prop drilling",
-    noteId: "note4",
-    userId: "user1",
+    deckId: "deck4",
     createdAt: "2024-01-17T14:05:00Z",
-    note: {
-      id: "note4",
-      title: "State Management",
-      category: "Frontend",
-    },
+    updatedAt: "2024-01-17T14:05:00Z",
   },
   {
     id: "12",
-    question: "What is RESTful API?",
-    answer:
+    term: "What is RESTful API?",
+    definition:
       "REST (Representational State Transfer) is an architectural style for designing networked applications, using HTTP methods like GET, POST, PUT, DELETE",
-    noteId: "note5",
-    userId: "user1",
+    deckId: "deck5",
     createdAt: "2024-01-18T16:00:00Z",
-    note: {
-      id: "note5",
-      title: "API Design",
-      category: "Backend",
-    },
+    updatedAt: "2024-01-18T16:00:00Z",
   },
   {
     id: "13",
-    question: "What is GraphQL?",
-    answer:
+    term: "What is GraphQL?",
+    definition:
       "GraphQL is a query language and runtime for APIs that allows clients to request exactly the data they need",
-    noteId: "note5",
-    userId: "user1",
+    deckId: "deck5",
     createdAt: "2024-01-18T16:05:00Z",
-    note: {
-      id: "note5",
-      title: "API Design",
-      category: "Backend",
-    },
+    updatedAt: "2024-01-18T16:05:00Z",
   },
 ];
 
@@ -219,18 +149,18 @@ export const getFlashcardDecks = async (): Promise<FlashcardDeck[]> => {
     await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
 
     const groupedFlashcards = mockFlashcards.reduce((acc, flashcard) => {
-      const noteId = flashcard.noteId;
-      if (!acc[noteId]) {
-        acc[noteId] = {
-          noteId,
-          noteTitle: flashcard.note?.title || "Unknown Note",
-          category: flashcard.note?.category || "General",
+      const deckId = flashcard.deckId;
+      if (!acc[deckId]) {
+        acc[deckId] = {
+          deckId,
+          noteTitle: "Unknown Note",
+          category: "General",
           flashcards: [],
           totalCards: 0,
         };
       }
-      acc[noteId].flashcards.push(flashcard);
-      acc[noteId].totalCards++;
+      acc[deckId].flashcards.push(flashcard);
+      acc[deckId].totalCards++;
       return acc;
     }, {} as Record<string, FlashcardDeck>);
 
@@ -248,7 +178,7 @@ export const getFlashcardsByNote = async (
   try {
     // In real app: const response = await api.get(`/flashcards/note/${noteId}`);
     await new Promise((resolve) => setTimeout(resolve, 300));
-    return mockFlashcards.filter((card) => card.noteId === noteId);
+    return mockFlashcards.filter((card) => card.deckId === noteId);
   } catch (error) {
     console.error("Error fetching flashcards by note:", error);
     throw error;
@@ -256,64 +186,21 @@ export const getFlashcardsByNote = async (
 };
 
 // Create new flashcard
-export const createFlashcard = async (
-  data: CreateFlashcardData
-): Promise<Flashcard> => {
-  try {
-    // In real app: const response = await api.post('/flashcards', data);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const newFlashcard: Flashcard = {
-      id: Date.now().toString(),
-      question: data.question,
-      answer: data.answer,
-      noteId: data.noteId,
-      userId: "user1",
-      createdAt: new Date().toISOString(),
-    };
-
-    mockFlashcards.push(newFlashcard);
-    return newFlashcard;
-  } catch (error) {
-    console.error("Error creating flashcard:", error);
-    throw error;
-  }
+export const createFlashcard = async (deckId: string, data: { term: string; definition: string; }) => {
+  const res = await api.post(`/decks/${deckId}/flashcards`, data);
+  return res.data;
 };
 
 // Update flashcard
-export const updateFlashcard = async (
-  id: string,
-  data: Partial<CreateFlashcardData>
-): Promise<Flashcard> => {
-  try {
-    // In real app: const response = await api.put(`/flashcards/${id}`, data);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const index = mockFlashcards.findIndex((card) => card.id === id);
-    if (index === -1) throw new Error("Flashcard not found");
-
-    mockFlashcards[index] = { ...mockFlashcards[index], ...data };
-    return mockFlashcards[index];
-  } catch (error) {
-    console.error("Error updating flashcard:", error);
-    throw error;
-  }
+export const updateFlashcard = async (id: string, data: { term: string; definition: string; }) => {
+  const res = await api.put(`/flashcards/${id}`, data);
+  return res.data;
 };
 
 // Delete flashcard
-export const deleteFlashcard = async (id: string): Promise<void> => {
-  try {
-    // In real app: await api.delete(`/flashcards/${id}`);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const index = mockFlashcards.findIndex((card) => card.id === id);
-    if (index === -1) throw new Error("Flashcard not found");
-
-    mockFlashcards.splice(index, 1);
-  } catch (error) {
-    console.error("Error deleting flashcard:", error);
-    throw error;
-  }
+export const deleteFlashcard = async (id: string) => {
+  const res = await api.delete(`/flashcards/${id}`);
+  return res.data;
 };
 
 // Generate flashcards from note content (AI feature)
@@ -346,7 +233,10 @@ export const generateFlashcardsFromNote = async (
 
     const flashcards: Flashcard[] = [];
     for (const cardData of generatedCards) {
-      const newCard = await createFlashcard(cardData);
+      const newCard = await createFlashcard(cardData.noteId, {
+        term: cardData.question,
+        definition: cardData.answer,
+      });
       flashcards.push(newCard);
     }
 
@@ -402,10 +292,8 @@ export const searchFlashcards = async (query: string): Promise<Flashcard[]> => {
 
     return mockFlashcards.filter(
       (card) =>
-        card.question.toLowerCase().includes(searchTerm) ||
-        card.answer.toLowerCase().includes(searchTerm) ||
-        card.note?.title.toLowerCase().includes(searchTerm) ||
-        card.note?.category.toLowerCase().includes(searchTerm)
+        card.term.toLowerCase().includes(searchTerm) ||
+        card.definition.toLowerCase().includes(searchTerm)
     );
   } catch (error) {
     console.error("Error searching flashcards:", error);
@@ -480,7 +368,7 @@ export const exportFlashcards = async (noteId?: string): Promise<string> => {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const cardsToExport = noteId
-      ? mockFlashcards.filter((card) => card.noteId === noteId)
+      ? mockFlashcards.filter((card) => card.deckId === noteId)
       : mockFlashcards;
 
     // In real app, this would return a downloadable file URL or content
@@ -502,10 +390,9 @@ export const importFlashcards = async (
     const newFlashcards: Flashcard[] = [];
 
     for (const cardData of importedData) {
-      const newCard = await createFlashcard({
-        question: cardData.question,
-        answer: cardData.answer,
-        noteId,
+      const newCard = await createFlashcard(cardData.deckId, {
+        term: cardData.term,
+        definition: cardData.definition,
       });
       newFlashcards.push(newCard);
     }
@@ -515,4 +402,9 @@ export const importFlashcards = async (
     console.error("Error importing flashcards:", error);
     throw error;
   }
+};
+
+export const getFlashcardsByDeck = async (deckId: string): Promise<Flashcard[]> => {
+  const res = await api.get(`/decks/${deckId}/flashcards`);
+  return res.data;
 };

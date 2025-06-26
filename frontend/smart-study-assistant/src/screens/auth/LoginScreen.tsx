@@ -5,22 +5,25 @@ import { COLORS, SIZES } from '../../constants/themes';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 
-const DUMMY_USER = { email: 'user@email.com', password: '123456' };
-
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const { login } = useAuth();
 
-  const handleLogin = () => {
-    if (email === DUMMY_USER.email && password === DUMMY_USER.password) {
-      login(); // chuyển sang AppNavigator
-    } else {
-      alert('Sai tài khoản hoặc mật khẩu!');
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      await login(email, password);
+      // Điều hướng sang app chính sẽ tự động nhờ context
+    } catch (err: any) {
+      Alert.alert('Đăng nhập thất bại', err?.response?.data?.message || 'Sai tài khoản hoặc mật khẩu!');
+    } finally {
+      setLoading(false);
     }
   };
-  //.
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Đăng nhập</Text>
@@ -39,11 +42,10 @@ const LoginScreen: React.FC = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <CustomButton title="Đăng nhập" onPress={handleLogin} />
+      <CustomButton title={loading ? 'Đang đăng nhập...' : 'Đăng nhập'} onPress={handleLogin} disabled={loading} />
       <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgot}>
         <Text style={styles.forgotText}>Quên mật khẩu?</Text>
       </TouchableOpacity>
-      <Text style={styles.hint}>Tài khoản mẫu: user@email.com / 123456</Text>
       <Text style={styles.or}>Hoặc đăng nhập bằng</Text>
       <View style={styles.socialRow}>
         <CustomButton title="Google" type="secondary" icon="logo-google" onPress={() => { }} />
@@ -90,12 +92,6 @@ const styles = StyleSheet.create({
   forgotText: {
     color: COLORS.primary,
     fontSize: 14,
-  },
-  hint: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    marginBottom: 8,
-    alignSelf: 'flex-start',
   },
   or: {
     color: COLORS.textSecondary,

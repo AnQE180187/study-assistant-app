@@ -2,34 +2,21 @@ const express = require('express');
 const router = express.Router();
 const {
   createFlashcard,
-  getFlashcards,
-  getFlashcardById,
+  getFlashcardsByDeck,
   updateFlashcard,
-  deleteFlashcard,
-  toggleFlashcardPublic,
-  getPublicFlashcards,
-  searchPublicFlashcards
+  deleteFlashcard
 } = require('../controllers/flashcardController');
 const { protect } = require('../middlewares/authMiddleware');
 
 router.use(protect);
 
-// CRUD
-router.route('/')
+// CRUD flashcard theo deck
+router.route('/decks/:deckId/flashcards')
   .post(createFlashcard)
-  .get(getFlashcards);
+  .get(getFlashcardsByDeck);
 
-router.route('/:id')
-  .get(getFlashcardById)
+router.route('/flashcards/:id')
   .put(updateFlashcard)
   .delete(deleteFlashcard);
-
-// Toggle public/private
-router.route('/:id/toggle-public')
-  .patch(toggleFlashcardPublic);
-
-// Public flashcards (no auth required)
-router.route('/public/all').get(getPublicFlashcards);
-router.route('/public/search').get(searchPublicFlashcards);
 
 module.exports = router; 
