@@ -7,15 +7,17 @@ type Props = {
   name: string;
   count: number;
   isPublic: boolean;
-  onPress: () => void;
+  onManage?: () => void;
+  onStudy?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   description?: string;
   tags?: string[];
+  hideManageBtn?: boolean;
 };
 
-const DeckCard: React.FC<Props> = ({ name, count, isPublic, onPress, onEdit, onDelete, description, tags }) => (
-  <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+const DeckCard: React.FC<Props> = ({ name, count, isPublic, onManage, onStudy, onEdit, onDelete, description, tags, hideManageBtn }) => (
+  <TouchableOpacity style={styles.card} onPress={onManage} activeOpacity={0.85}>
     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
       <Ionicons name="albums-outline" size={24} color={COLORS.primary} style={{ marginRight: 8 }} />
       <Text style={styles.name}>{name}</Text>
@@ -44,10 +46,20 @@ const DeckCard: React.FC<Props> = ({ name, count, isPublic, onPress, onEdit, onD
       </View>
     )}
     <Text style={styles.count}>{count} thẻ</Text>
-    <TouchableOpacity style={styles.studyBtn} onPress={onPress}>
-      <Text style={styles.studyText}>Vào học</Text>
-      <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 4 }} />
-    </TouchableOpacity>
+    <View style={styles.buttonRow}>
+      {!hideManageBtn && onManage && (
+        <TouchableOpacity style={styles.manageBtn} onPress={onManage}>
+          <Text style={styles.manageText}>Quản lý</Text>
+          <Ionicons name="settings-outline" size={16} color={COLORS.primary} style={{ marginLeft: 4 }} />
+        </TouchableOpacity>
+      )}
+      {onStudy && (
+        <TouchableOpacity style={styles.studyBtn} onPress={onStudy}>
+          <Text style={styles.studyText}>Vào học</Text>
+          <Ionicons name="play" size={16} color="#fff" style={{ marginLeft: 4 }} />
+        </TouchableOpacity>
+      )}
+    </View>
   </TouchableOpacity>
 );
 
@@ -74,20 +86,39 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 6,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  manageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  manageText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontSize: 14,
+  },
   studyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
+    borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   studyText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 14,
   },
 });
-//.
+
 export default DeckCard;

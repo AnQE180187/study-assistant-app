@@ -6,7 +6,9 @@ const {
   getStudyPlanById,
   updateStudyPlan,
   deleteStudyPlan,
-  getNextStudyPlan
+  getStudyPlansByRange,
+  toggleStudyPlanCompletion,
+  getStudyPlanStats
 } = require('../controllers/studyPlanController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -22,7 +24,9 @@ router.route('/:id')
   .put(updateStudyPlan)
   .delete(deleteStudyPlan);
 
-// Get next upcoming study plan
-router.route('/next/upcoming').get(getNextStudyPlan);
+// Additional endpoints
+router.route('/range').get(getStudyPlansByRange);
+router.route('/stats').get(getStudyPlanStats);
+router.route('/:id/toggle').patch(toggleStudyPlanCompletion);
 
 module.exports = router; 

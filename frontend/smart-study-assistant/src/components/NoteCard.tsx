@@ -1,68 +1,292 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, SIZES, SHADOW } from '../constants/themes';
 import { Ionicons } from '@expo/vector-icons';
-//.
-type Props = {
-  title: string;
-  tag: string;
-  date: string;
-  onEdit: () => void;
-  onDelete: () => void;
-};
+import { COLORS, SIZES } from '../constants/themes';
 
-const NoteCard: React.FC<Props> = ({ title, tag, date, onEdit, onDelete }) => (
-  <View style={styles.card}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-      <Ionicons name="document-text-outline" size={20} color={COLORS.primary} style={{ marginRight: 8 }} />
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.tag}><Text style={styles.tagText}>{tag}</Text></View>
-    </View>
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={styles.date}>{date}</Text>
-      <View style={{ flexDirection: 'row' }}>
-        <TouchableOpacity onPress={onEdit} style={styles.iconBtn}>
-          <Ionicons name="create-outline" size={18} color={COLORS.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onDelete} style={styles.iconBtn}>
-          <Ionicons name="trash-outline" size={18} color={COLORS.error} />
-        </TouchableOpacity>
+interface NoteCardProps {
+  title: string;
+  description?: string;
+  content?: string;
+  tags?: string[];
+  category?: string;
+  priority?: 'low' | 'medium' | 'high';
+  color?: string;
+  isPinned?: boolean;
+  isPublic?: boolean;
+  createdAt?: string;
+  onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onTogglePin?: () => void;
+}
+
+const NoteCard: React.FC<NoteCardProps> = ({
+  title,
+  description,
+  content,
+  tags = [],
+  category,
+  priority = 'medium',
+  color,
+  isPinned = false,
+  isPublic = false,
+  createdAt,
+  onPress,
+  onEdit,
+  onDelete,
+  onTogglePin,
+}) => {
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return '#FF6B6B';
+      case 'medium': return '#FFA726';
+      case 'low': return '#66BB6A';
+      default: return COLORS.textSecondary;
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'alert-circle';
+      case 'medium': return 'remove-circle';
+      case 'low': return 'checkmark-circle';
+      default: return 'remove-circle';
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.card, 
+        { 
+          borderLeftColor: color || COLORS.primary,
+          borderLeftWidth: 4,
+          backgroundColor: isPinned ? COLORS.primaryLight : COLORS.card 
+        }
+      ]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title} numberOfLines={2}>
+            {title}
+          </Text>
+          {isPinned && (
+            <Ionicons name="pin" size={16} color={COLORS.primary} />
+          )}
+        </View>
+        
+        <View style={styles.headerActions}>
+          {onTogglePin && (
+            <TouchableOpacity onPress={onTogglePin} style={styles.actionBtn}>
+              <Ionicons 
+                name={isPinned ? "pin" : "pin-outline"} 
+                size={16} 
+                color={isPinned ? COLORS.primary : COLORS.textSecondary} 
+              />
+            </TouchableOpacity>
+          )}
+          {onEdit && (
+            <TouchableOpacity onPress={onEdit} style={styles.actionBtn}>
+              <Ionicons name="create-outline" size={16} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity onPress={onDelete} style={styles.actionBtn}>
+              <Ionicons name="trash-outline" size={16} color={COLORS.error} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
-  </View>
-);
+
+      {/* Description */}
+      {description && (
+        <Text style={styles.description} numberOfLines={2}>
+          {description}
+        </Text>
+      )}
+
+      {/* Content Preview */}
+      {content && !description && (
+        <Text style={styles.contentPreview} numberOfLines={3}>
+          {truncateText(content, 120)}
+        </Text>
+      )}
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {tags.slice(0, 3).map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+          {tags.length > 3 && (
+            <Text style={styles.moreTags}>+{tags.length - 3}</Text>
+          )}
+        </View>
+      )}
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <View style={styles.footerLeft}>
+          {category && (
+            <View style={styles.category}>
+              <Text style={styles.categoryText}>{category}</Text>
+            </View>
+          )}
+          <View style={styles.priorityContainer}>
+            <Ionicons 
+              name={getPriorityIcon(priority)} 
+              size={14} 
+              color={getPriorityColor(priority)} 
+            />
+            <Text style={[styles.priorityText, { color: getPriorityColor(priority) }]}>
+              {priority}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.footerRight}>
+          {isPublic && (
+            <Ionicons name="globe-outline" size={14} color={COLORS.textSecondary} />
+          )}
+          {createdAt && (
+            <Text style={styles.date}>{formatDate(createdAt)}</Text>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
     borderRadius: SIZES.radius,
-    padding: SIZES.cardPadding,
-    marginVertical: 8,
-    ...SHADOW,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  titleRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: COLORS.text,
     flex: 1,
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionBtn: {
+    padding: 4,
+  },
+  description: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  contentPreview: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 12,
+  },
   tag: {
     backgroundColor: COLORS.primaryLight,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
+    paddingVertical: 4,
   },
   tagText: {
+    fontSize: 12,
     color: COLORS.primary,
-    fontSize: 13,
+    fontWeight: '500',
+  },
+  moreTags: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    alignSelf: 'center',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  category: {
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  priorityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  priorityText: {
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'capitalize',
+  },
+  footerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   date: {
+    fontSize: 12,
     color: COLORS.textSecondary,
-    fontSize: 13,
-  },
-  iconBtn: {
-    marginLeft: 12,
   },
 });
 

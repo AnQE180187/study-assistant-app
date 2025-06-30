@@ -8,6 +8,21 @@ const createFlashcard = async (req, res) => {
     const { term, definition } = req.body;
     const { deckId } = req.params;
     const userId = req.user.id;
+    
+    // Kiểm tra deck có tồn tại và user có quyền tạo flashcard không
+    const deck = await prisma.deck.findUnique({
+      where: { id: deckId },
+      select: { userId: true }
+    });
+    
+    if (!deck) {
+      return res.status(404).json({ message: 'Deck not found' });
+    }
+    
+    if (deck.userId !== userId) {
+      return res.status(401).json({ message: 'Not authorized to create flashcards in this deck' });
+    }
+    
     const flashcard = await prisma.flashcard.create({
       data: { term, definition, deckId, userId },
     });
@@ -24,8 +39,30 @@ const getFlashcardsByDeck = async (req, res) => {
   try {
     const { deckId } = req.params;
     const userId = req.user.id;
+    
+    // Kiểm tra deck có tồn tại và user có quyền xem không
+    const deck = await prisma.deck.findUnique({
+      where: { id: deckId },
+      select: { userId: true, isPublic: true }
+    });
+    
+    if (!deck) {
+      return res.status(404).json({ message: 'Deck not found' });
+    }
+    
+    // Chỉ cho phép xem nếu là owner hoặc deck là public
+    if (deck.userId !== userId && !deck.isPublic) {
+      return res.status(401).json({ message: 'Not authorized to view this deck' });
+    }
+    
+    // Nếu là owner, lấy tất cả flashcards trong deck
+    // Nếu là public deck và không phải owner, chỉ lấy flashcards của owner
+    const whereClause = deck.userId === userId 
+      ? { deckId } 
+      : { deckId, userId: deck.userId };
+    
     const flashcards = await prisma.flashcard.findMany({
-      where: { deckId, userId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
     });
     res.json(flashcards);
@@ -79,6 +116,230 @@ const deleteFlashcard = async (req, res) => {
     if (flashcard.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
     await prisma.flashcard.delete({ where: { id: req.params.id } });
     res.json({ message: 'Flashcard removed' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Search flashcards
+// @route   GET /api/flashcards/search?q=query
+// @access  Private
+const searchFlashcards = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const userId = req.user.id;
+    
+    if (!q) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const flashcards = await prisma.flashcard.findMany({
+      where: {
+        userId,
+        OR: [
+          { term: { contains: q, mode: 'insensitive' } },
+          { definition: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(flashcards);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Get flashcard statistics
+// @route   GET /api/flashcards/stats
+// @access  Private
+const getFlashcardStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const totalCards = await prisma.flashcard.count({
+      where: { userId },
+    });
+
+    const totalDecks = await prisma.deck.count({
+      where: { userId },
+    });
+
+    // Get flashcards created in last 7 days
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    const recentActivity = await prisma.flashcard.count({
+      where: {
+        userId,
+        createdAt: { gte: weekAgo },
+      },
+    });
+
+    // Get categories count (based on deck tags)
+    const decks = await prisma.deck.findMany({
+      where: { userId },
+      select: { tags: true },
+    });
+
+    const categoriesCount = {};
+    decks.forEach(deck => {
+      deck.tags.forEach(tag => {
+        categoriesCount[tag] = (categoriesCount[tag] || 0) + 1;
+      });
+    });
+
+    res.json({
+      totalCards,
+      totalDecks,
+      categoriesCount,
+      recentActivity,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Bulk delete flashcards
+// @route   DELETE /api/flashcards/bulk
+// @access  Private
+const bulkDeleteFlashcards = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userId = req.user.id;
+
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ message: 'Flashcard IDs array is required' });
+    }
+
+    // Verify all flashcards belong to user
+    const flashcards = await prisma.flashcard.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, userId: true },
+    });
+
+    const unauthorizedCards = flashcards.filter(card => card.userId !== userId);
+    if (unauthorizedCards.length > 0) {
+      return res.status(401).json({ message: 'Not authorized to delete some flashcards' });
+    }
+
+    await prisma.flashcard.deleteMany({
+      where: { id: { in: ids } },
+    });
+
+    res.json({ message: `${ids.length} flashcards deleted` });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Bulk update flashcards
+// @route   PUT /api/flashcards/bulk
+// @access  Private
+const bulkUpdateFlashcards = async (req, res) => {
+  try {
+    const { updates } = req.body;
+    const userId = req.user.id;
+
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ message: 'Updates array is required' });
+    }
+
+    const updatedFlashcards = [];
+    
+    for (const update of updates) {
+      const { id, data } = update;
+      
+      // Verify flashcard belongs to user
+      const flashcard = await prisma.flashcard.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
+      if (!flashcard) {
+        continue;
+      }
+
+      if (flashcard.userId !== userId) {
+        continue;
+      }
+
+      const updated = await prisma.flashcard.update({
+        where: { id },
+        data: { term: data.term, definition: data.definition },
+      });
+
+      updatedFlashcards.push(updated);
+    }
+
+    res.json(updatedFlashcards);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Export flashcards
+// @route   GET /api/flashcards/export?deckId=xxx
+// @access  Private
+const exportFlashcards = async (req, res) => {
+  try {
+    const { deckId } = req.query;
+    const userId = req.user.id;
+
+    const whereClause = { userId };
+    if (deckId) {
+      whereClause.deckId = deckId;
+    }
+
+    const flashcards = await prisma.flashcard.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const exportData = JSON.stringify(flashcards, null, 2);
+    res.json({ data: exportData, count: flashcards.length });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Import flashcards
+// @route   POST /api/flashcards/import
+// @access  Private
+const importFlashcards = async (req, res) => {
+  try {
+    const { data, deckId } = req.body;
+    const userId = req.user.id;
+
+    if (!data || !deckId) {
+      return res.status(400).json({ message: 'Data and deckId are required' });
+    }
+
+    // Verify deck belongs to user
+    const deck = await prisma.deck.findUnique({
+      where: { id: deckId },
+      select: { userId: true },
+    });
+
+    if (!deck || deck.userId !== userId) {
+      return res.status(401).json({ message: 'Not authorized to import to this deck' });
+    }
+
+    const importedData = JSON.parse(data);
+    const importedFlashcards = [];
+
+    for (const cardData of importedData) {
+      const flashcard = await prisma.flashcard.create({
+        data: {
+          term: cardData.term,
+          definition: cardData.definition,
+          deckId,
+          userId,
+        },
+      });
+      importedFlashcards.push(flashcard);
+    }
+
+    res.json(importedFlashcards);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -139,13 +400,52 @@ const searchPublicFlashcards = async (req, res) => {
   }
 };
 
+// @desc    Get all flashcards in a public deck (for viewing)
+// @route   GET /api/decks/:deckId/flashcards/public
+// @access  Public
+const getPublicFlashcardsByDeck = async (req, res) => {
+  try {
+    const { deckId } = req.params;
+    
+    // Kiểm tra deck có public không
+    const deck = await prisma.deck.findUnique({
+      where: { id: deckId },
+      select: { isPublic: true }
+    });
+    
+    if (!deck) {
+      return res.status(404).json({ message: 'Deck not found' });
+    }
+    
+    if (!deck.isPublic) {
+      return res.status(403).json({ message: 'This deck is not public' });
+    }
+    
+    const flashcards = await prisma.flashcard.findMany({
+      where: { deckId },
+      orderBy: { createdAt: 'asc' },
+    });
+    
+    res.json(flashcards);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createFlashcard,
   getFlashcardsByDeck,
   getFlashcardById,
   updateFlashcard,
   deleteFlashcard,
+  searchFlashcards,
+  getFlashcardStats,
+  bulkDeleteFlashcards,
+  bulkUpdateFlashcards,
+  exportFlashcards,
+  importFlashcards,
   toggleFlashcardPublic,
   getPublicFlashcards,
   searchPublicFlashcards,
+  getPublicFlashcardsByDeck,
 }; 

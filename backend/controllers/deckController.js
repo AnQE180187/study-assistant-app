@@ -90,13 +90,26 @@ const deleteDeck = async (req, res) => {
 // @access  Public
 const getPublicDecks = async (req, res) => {
   try {
+    console.log('Fetching public decks...');
     const decks = await prisma.deck.findMany({
       where: { isPublic: true },
       orderBy: { createdAt: 'desc' },
-      include: { flashcards: true },
+      include: { 
+        flashcards: {
+          orderBy: { createdAt: 'asc' }
+        }
+      },
+    });
+    console.log(`Found ${decks.length} public decks`);
+    decks.forEach(deck => {
+      console.log(`Deck ${deck.title} (${deck.id}): ${deck.flashcards.length} flashcards`);
+      deck.flashcards.forEach(card => {
+        console.log(`  - Flashcard: ${card.term} -> ${card.definition} (user: ${card.userId})`);
+      });
     });
     res.json(decks);
   } catch (error) {
+    console.error('Error fetching public decks:', error);
     res.status(400).json({ message: error.message });
   }
 };

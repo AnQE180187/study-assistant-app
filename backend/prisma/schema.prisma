@@ -32,8 +32,14 @@ model User {
 model Note {
   id          String      @id @default(auto()) @map("_id") @db.ObjectId
   title       String
-  content     String
-  category    String
+  description String?     // Mô tả ngắn gọn
+  content     String      // Nội dung chi tiết
+  tags        String[]    // Tags để phân loại
+  category    String      // Giữ lại để tương thích
+  priority    String      @default("medium") // low, medium, high
+  color       String?     // Màu sắc cho note
+  isPublic    Boolean     @default(false) // Có thể chia sẻ công khai
+  isPinned    Boolean     @default(false) // Ghim note quan trọng
   userId      String      @db.ObjectId
   user        User        @relation(fields: [userId], references: [id])
   createdAt   DateTime    @default(now())
@@ -67,9 +73,11 @@ model Flashcard {
 
 model StudyPlan {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  goal        String
-  startDate   DateTime
-  endDate     DateTime
+  title       String
+  date        DateTime
+  time        String
+  note        String?
+  completed   Boolean  @default(false)
   userId      String   @db.ObjectId
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())

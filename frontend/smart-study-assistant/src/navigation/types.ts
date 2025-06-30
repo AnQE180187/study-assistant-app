@@ -1,4 +1,5 @@
 import { Flashcard } from "../services/flashcardService";
+import { StudyPlan } from "../services/studyPlanService";
 
 export type RootStackParamList = {
   // Main tabs
@@ -9,24 +10,38 @@ export type RootStackParamList = {
   Profile: undefined;
   // Flashcard screens
   FlashcardDeckDetail: {
-    noteId: string;
+    deckId: string;
     title: string;
   };
   FlashcardManagement: {
-    noteId: string;
+    deckId: string;
     title: string;
   };
   FlashcardPractice: {
-    noteId: string;
+    deckId: string;
     title: string;
-    flashcards: Flashcard[];
+    flashcards?: Flashcard[];
+    isPublic?: boolean;
   };
   CreateFlashcard: {
-    noteId?: string;
+    deckId?: string;
     onCreated?: () => void;
   };
   EditFlashcard: {
     flashcard: Flashcard;
+    onUpdate?: () => void;
+  };
+
+  // Study Plan screens
+  StudyPlanDetail: {
+    studyPlanId: string;
+  };
+  CreateStudyPlan: {
+    date?: string;
+    onCreated?: () => void;
+  };
+  EditStudyPlan: {
+    studyPlan: StudyPlan;
     onUpdate?: () => void;
   };
 
