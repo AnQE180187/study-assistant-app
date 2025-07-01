@@ -29,6 +29,7 @@ const FlashcardManagementScreen: React.FC = () => {
 
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [operationLoading, setOperationLoading] = useState(false);
   const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
   const [temp, setTemp] = useState<{ term: string; definition: string }>({ term: '', definition: '' });
 
@@ -42,8 +43,11 @@ const FlashcardManagementScreen: React.FC = () => {
     try {
       const data = await getFlashcardsByDeck(deckId);
       setFlashcards(data);
-    } catch (e) {}
-    setLoading(false);
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || 'Không thể tải danh sách flashcard');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openAdd = () => {
@@ -58,29 +62,65 @@ const FlashcardManagementScreen: React.FC = () => {
   const closeModal = () => setModal({ type: null });
 
   const handleAdd = async () => {
+    if (!temp.term.trim() || !temp.definition.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thuật ngữ và định nghĩa');
+      return;
+    }
+    
+    setOperationLoading(true);
     try {
-      await createFlashcard(deckId, { term: temp.term, definition: temp.definition });
+      await createFlashcard(deckId, { 
+        term: temp.term.trim(), 
+        definition: temp.definition.trim() 
+      });
       await fetchFlashcards();
       closeModal();
-    } catch (e) {}
-  };
-  const handleEdit = async () => {
-    if (modal.index !== undefined && flashcards[modal.index]) {
-      try {
-        await updateFlashcard(flashcards[modal.index].id, { term: temp.term, definition: temp.definition });
-        await fetchFlashcards();
-      } catch (e) {}
+      Alert.alert('Thành công', 'Đã thêm flashcard mới');
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || 'Không thể thêm flashcard');
+    } finally {
+      setOperationLoading(false);
     }
-    closeModal();
   };
+  
+  const handleEdit = async () => {
+    if (!temp.term.trim() || !temp.definition.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thuật ngữ và định nghĩa');
+      return;
+    }
+    
+    if (modal.index !== undefined && flashcards[modal.index]) {
+      setOperationLoading(true);
+      try {
+        await updateFlashcard(flashcards[modal.index].id, { 
+          term: temp.term.trim(), 
+          definition: temp.definition.trim() 
+        });
+        await fetchFlashcards();
+        closeModal();
+        Alert.alert('Thành công', 'Đã cập nhật flashcard');
+      } catch (error: any) {
+        Alert.alert('Lỗi', error.message || 'Không thể cập nhật flashcard');
+      } finally {
+        setOperationLoading(false);
+      }
+    }
+  };
+  
   const handleDelete = async () => {
     if (modal.index !== undefined && flashcards[modal.index]) {
+      setOperationLoading(true);
       try {
         await deleteFlashcard(flashcards[modal.index].id);
         await fetchFlashcards();
-      } catch (e) {}
+        closeModal();
+        Alert.alert('Thành công', 'Đã xóa flashcard');
+      } catch (error: any) {
+        Alert.alert('Lỗi', error.message || 'Không thể xóa flashcard');
+      } finally {
+        setOperationLoading(false);
+      }
     }
-    closeModal();
   };
 
   const renderFlashcard = ({ item, index }: { item: Flashcard; index: number }) => (
@@ -102,6 +142,15 @@ const FlashcardManagementScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>Đang tải...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -109,19 +158,37 @@ const FlashcardManagementScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <TouchableOpacity onPress={() => (navigation as any).navigate('FlashcardPractice', { deckId, title })}>
+          <Ionicons name="play" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.addButton} onPress={openAdd}>
+      
+      <TouchableOpacity style={styles.addButton} onPress={openAdd} disabled={operationLoading}>
         <Text style={styles.addButtonText}>THÊM FLASHCARD</Text>
       </TouchableOpacity>
-      {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} /> : (
+      
+      {flashcards.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name="document-text-outline" size={64} color={COLORS.textSecondary} />
+          <Text style={{ marginTop: 16, color: COLORS.textSecondary, fontSize: 16 }}>
+            Chưa có flashcard nào
+          </Text>
+          <TouchableOpacity style={styles.createFirstBtn} onPress={openAdd}>
+            <Text style={styles.createFirstText}>Thêm flashcard đầu tiên</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
         <FlatList
           data={flashcards}
           renderItem={renderFlashcard}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          refreshing={loading}
+          onRefresh={fetchFlashcards}
         />
       )}
+      
       {/* Modal cho Thêm/Sửa/Xóa flashcard */}
       <ModalCard
         visible={modal.type === 'add'}
@@ -152,6 +219,13 @@ const FlashcardManagementScreen: React.FC = () => {
         onSubmit={handleDelete}
         onCancel={closeModal}
       />
+      
+      {operationLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={{ marginTop: 8, color: COLORS.textSecondary }}>Đang xử lý...</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -198,31 +272,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 16,
-    minHeight: 80,
-    justifyContent: "center",
-    ...{
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 2,
-    },
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   term: {
     fontSize: 16,
-    color: COLORS.primary,
     fontWeight: "bold",
-    marginBottom: 4,
-  },
-  definition: {
-    fontSize: 15,
-    color: COLORS.text,
+    color: "#333",
     marginBottom: 8,
   },
+  definition: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
   actionRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  createFirstBtn: {
+    marginTop: 16,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  createFirstText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
   },
 });
 
