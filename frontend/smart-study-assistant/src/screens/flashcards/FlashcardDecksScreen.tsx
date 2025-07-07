@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { COLORS, SIZES } from '../../constants/themes';
 import DeckCard from '../../components/DeckCard';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
   const [myDecks, setMyDecks] = useState<Deck[]>([]);
   const [publicDecks, setPublicDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
+  const [operationLoading, setOperationLoading] = useState(false);
   const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
   const [temp, setTemp] = useState<Partial<Deck>>({ title: '', description: '', tags: [], isPublic: false });
 
@@ -28,8 +29,8 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
         const decks = await getPublicDecks();
         setPublicDecks(decks);
       }
-    } catch (e) {
-      // handle error
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || 'Không thể tải danh sách bộ thẻ');
     } finally {
       setLoading(false);
     }
@@ -52,41 +53,71 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
 
   // CRUD
   const handleAdd = async () => {
+    if (!temp.title?.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên bộ thẻ');
+      return;
+    }
+    
+    setOperationLoading(true);
     try {
       const newDeck = await createDeck({
-        title: temp.title || '',
-        description: temp.description || '',
+        title: temp.title.trim(),
+        description: temp.description?.trim() || '',
         tags: temp.tags || [],
         isPublic: !!temp.isPublic,
       });
       setMyDecks([newDeck, ...myDecks]);
       closeModal();
-    } catch (e) {}
+      Alert.alert('Thành công', 'Đã tạo bộ thẻ mới');
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || 'Không thể tạo bộ thẻ');
+    } finally {
+      setOperationLoading(false);
+    }
   };
+  
   const handleEdit = async () => {
+    if (!temp.title?.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên bộ thẻ');
+      return;
+    }
+    
     if (modal.index !== undefined && decks[modal.index]) {
+      setOperationLoading(true);
       try {
         const updated = await updateDeck(decks[modal.index].id, {
-          title: temp.title,
-          description: temp.description,
-          tags: temp.tags,
+          title: temp.title.trim(),
+          description: temp.description?.trim() || '',
+          tags: temp.tags || [],
           isPublic: temp.isPublic,
         });
         const newDecks = [...decks];
         newDecks[modal.index] = updated;
         setDecks(newDecks);
-      } catch (e) {}
+        closeModal();
+        Alert.alert('Thành công', 'Đã cập nhật bộ thẻ');
+      } catch (error: any) {
+        Alert.alert('Lỗi', error.message || 'Không thể cập nhật bộ thẻ');
+      } finally {
+        setOperationLoading(false);
+      }
     }
-    closeModal();
   };
+  
   const handleDelete = async () => {
     if (modal.index !== undefined && decks[modal.index]) {
+      setOperationLoading(true);
       try {
         await deleteDeck(decks[modal.index].id);
         setDecks(decks.filter((_, i) => i !== modal.index));
-      } catch (e) {}
+        closeModal();
+        Alert.alert('Thành công', 'Đã xóa bộ thẻ');
+      } catch (error: any) {
+        Alert.alert('Lỗi', error.message || 'Không thể xóa bộ thẻ');
+      } finally {
+        setOperationLoading(false);
+      }
     }
-    closeModal();
   };
 
   // Chuyển sang màn quản lý flashcard trong deck
@@ -94,6 +125,16 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
     navigation.navigate('FlashcardManagement', {
       deckId: deck.id,
       title: deck.title,
+    });
+  };
+
+  // Chuyển sang màn luyện tập flashcard
+  const handleStudyPress = (deck: Deck) => {
+    console.log('Navigating to FlashcardPractice with deck:', deck.id, deck.title);
+    navigation.navigate('FlashcardPractice', {
+      deckId: deck.id,
+      title: deck.title,
+      isPublic: tab === 'public',
     });
   };
 
@@ -117,6 +158,15 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>Đang tải...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.tabRow}>
@@ -127,7 +177,20 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
           <Text style={[styles.tabText, tab === 'public' && styles.tabTextActive]}>Công khai</Text>
         </TouchableOpacity>
       </View>
-      {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} /> : (
+      
+      {decks.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name="albums-outline" size={64} color={COLORS.textSecondary} />
+          <Text style={{ marginTop: 16, color: COLORS.textSecondary, fontSize: 16 }}>
+            {tab === 'my' ? 'Chưa có bộ thẻ nào' : 'Chưa có bộ thẻ công khai'}
+          </Text>
+          {tab === 'my' && (
+            <TouchableOpacity style={styles.createFirstBtn} onPress={openAdd}>
+              <Text style={styles.createFirstText}>Tạo bộ thẻ đầu tiên</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
         <FlatList
           data={decks}
           keyExtractor={item => item.id}
@@ -136,19 +199,27 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
               name={item.title}
               count={item.flashcards?.length || 0}
               isPublic={item.isPublic}
-              onPress={() => handleDeckPress(item)}
-              onEdit={() => openEdit(index)}
-              onDelete={() => openDelete(index)}
+              onManage={tab === 'my' ? () => handleDeckPress(item) : undefined}
+              onStudy={() => handleStudyPress(item)}
+              onEdit={tab === 'my' ? () => openEdit(index) : undefined}
+              onDelete={tab === 'my' ? () => openDelete(index) : undefined}
               description={item.description}
               tags={item.tags}
+              hideManageBtn={tab === 'public'}
             />
           )}
           contentContainerStyle={{ paddingBottom: 80 }}
+          refreshing={loading}
+          onRefresh={fetchDecks}
         />
       )}
-      <TouchableOpacity style={styles.fab} onPress={openAdd}>
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
+      
+      {tab === 'my' && (
+        <TouchableOpacity style={styles.fab} onPress={openAdd} disabled={operationLoading}>
+          <Ionicons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+      
       {/* ModalCard cho Thêm/Sửa/Xóa */}
       <ModalCard
         visible={modal.type === 'add'}
@@ -185,6 +256,13 @@ const FlashcardDecksScreen = ({ navigation }: any) => {
         onSubmit={handleDelete}
         onCancel={closeModal}
       />
+      
+      {operationLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={{ marginTop: 8, color: COLORS.textSecondary }}>Đang xử lý...</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -199,43 +277,62 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 18,
     backgroundColor: COLORS.primaryLight,
-    borderRadius: 999,
+    borderRadius: 12,
     padding: 4,
   },
   tabBtn: {
     flex: 1,
-    alignItems: 'center',
     paddingVertical: 10,
-    borderRadius: 999,
+    alignItems: 'center',
+    borderRadius: 8,
   },
   tabBtnActive: {
     backgroundColor: COLORS.primary,
   },
   tabText: {
-    color: COLORS.primary,
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   tabTextActive: {
     color: '#fff',
   },
   fab: {
     position: 'absolute',
-    right: 24,
-    bottom: 32,
+    bottom: 20,
+    right: 20,
     backgroundColor: COLORS.primary,
-    borderRadius: 999,
     width: 56,
     height: 56,
-    alignItems: 'center',
+    borderRadius: 28,
     justifyContent: 'center',
-    ...{
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 2,
-    },
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  createFirstBtn: {
+    marginTop: 16,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  createFirstText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
