@@ -14,8 +14,19 @@ const WelcomeScreen = ({ navigation }: any) => {
         <Text style={styles.desc}>Học tập thông minh, hiệu quả hơn mỗi ngày!</Text>
       </View>
       <View style={styles.btnWrap}>
-        <CustomButton title="Đăng nhập" onPress={() => navigation.navigate('Login')} />
-        <CustomButton title="Đăng ký" type="secondary" onPress={() => navigation.navigate('Register')} />
+        <CustomButton
+          title="Đăng nhập"
+          onPress={() => navigation.navigate('Login')}
+          style={styles.buttonLogin}
+          textStyle={styles.buttonLoginText}
+        />
+        <CustomButton
+          title="Đăng ký"
+          type="secondary"
+          onPress={() => navigation.navigate('Register')}
+          style={styles.buttonRegister}
+          textStyle={styles.buttonRegisterText}
+        />
         {/* <Text style={styles.or}>Hoặc đăng nhập bằng</Text>
         <View style={styles.socialRow}>
           <CustomButton title="Google" type="secondary" icon="logo-google" onPress={() => { }} />
@@ -56,6 +67,44 @@ const styles = StyleSheet.create({
   btnWrap: {
     width: '90%',
     alignItems: 'center',
+    marginTop: 24,
+  },
+  buttonLogin: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 36,
+    borderRadius: 18,
+    marginBottom: 18,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+    width: 200,
+  },
+  buttonLoginText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+    letterSpacing: 0.2,
+  },
+  buttonRegister: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    paddingHorizontal: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    marginBottom: 8,
+    width: 200,
+  },
+  buttonRegisterText: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    fontSize: 18,
+    letterSpacing: 0.2,
   },
   or: {
     color: COLORS.textSecondary,

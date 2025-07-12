@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/prismaClient');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -93,7 +94,12 @@ const getUserProfile = async (req, res) => {
         id: true,
         name: true,
         email: true,
+        avatar: true,
+        dateOfBirth: true,
+        gender: true,
         role: true,
+        language: true,
+        theme: true,
         createdAt: true,
       },
     });
@@ -168,10 +174,194 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Gửi OTP quên mật khẩu
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return res.status(404).json({ message: 'Email không tồn tại' });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  await prisma.otp.create({ data: { email, otp, expiresAt } });
+
+  // Gửi email bằng nodemailer
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
+    },
+  });
+  await transporter.sendMail({
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: 'Mã OTP đặt lại mật khẩu',
+    text: `Mã OTP của bạn là: ${otp}`,
+  });
+
+  res.json({ message: 'Đã gửi OTP về email' });
+};
+
+// Xác thực OTP quên mật khẩu
+exports.verifyOtpForgot = async (req, res) => {
+  const { email, otp } = req.body;
+  const record = await prisma.otp.findFirst({ where: { email, otp } });
+  if (!record) return res.status(400).json({ message: 'OTP không đúng' });
+  if (new Date() > record.expiresAt) return res.status(400).json({ message: 'OTP đã hết hạn' });
+  res.json({ message: 'OTP hợp lệ' });
+};
+
+// Đặt lại mật khẩu mới
+exports.resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  const record = await prisma.otp.findFirst({ where: { email, otp } });
+  if (!record) return res.status(400).json({ message: 'OTP không đúng' });
+  if (new Date() > record.expiresAt) return res.status(400).json({ message: 'OTP đã hết hạn' });
+
+  const hash = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { email }, data: { password: hash } });
+  await prisma.otp.deleteMany({ where: { email } });
+
+  res.json({ message: 'Đặt lại mật khẩu thành công' });
+};
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateProfile = async (req, res) => {
+  try {
+    const { name, dateOfBirth, gender } = req.body;
+    const userId = req.user.id;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: name || undefined,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+        gender: gender || undefined,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        dateOfBirth: true,
+        gender: true,
+        role: true,
+        language: true,
+        theme: true,
+        createdAt: true,
+      },
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Change password
+// @route   PUT /api/users/change-password
+// @access  Private
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Get current user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Update language preference
+// @route   PUT /api/users/language
+// @access  Private
+const updateLanguage = async (req, res) => {
+  try {
+    const { language } = req.body;
+    const userId = req.user.id;
+
+    if (!['vi', 'en'].includes(language)) {
+      return res.status(400).json({ message: 'Invalid language. Use "vi" or "en"' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { language },
+      select: {
+        id: true,
+        language: true,
+      },
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Update theme preference
+// @route   PUT /api/users/theme
+// @access  Private
+const updateTheme = async (req, res) => {
+  try {
+    const { theme } = req.body;
+    const userId = req.user.id;
+
+    if (!['light', 'dark'].includes(theme)) {
+      return res.status(400).json({ message: 'Invalid theme. Use "light" or "dark"' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { theme },
+      select: {
+        id: true,
+        theme: true,
+      },
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  forgotPassword,
-  resetPassword,
+  updateProfile,
+  changePassword,
+  updateLanguage,
+  updateTheme,
+  forgotPassword: exports.forgotPassword, // ensure OTP version is exported
+  resetPassword: exports.resetPassword,   // ensure OTP version is exported
+  verifyOtpForgot: exports.verifyOtpForgot, // add this line
 }; 

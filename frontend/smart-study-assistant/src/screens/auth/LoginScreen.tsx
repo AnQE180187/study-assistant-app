@@ -42,14 +42,34 @@ const LoginScreen: React.FC = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <CustomButton title={loading ? 'Đang đăng nhập...' : 'Đăng nhập'} onPress={handleLogin} disabled={loading} />
+      <CustomButton
+        title={loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        onPress={handleLogin}
+        disabled={loading}
+        style={styles.loginBtn}
+        textStyle={styles.loginBtnText}
+      />
       <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgot}>
         <Text style={styles.forgotText}>Quên mật khẩu?</Text>
       </TouchableOpacity>
       <Text style={styles.or}>Hoặc đăng nhập bằng</Text>
       <View style={styles.socialRow}>
-        <CustomButton title="Google" type="secondary" icon="logo-google" onPress={() => { }} />
-        <CustomButton title="Facebook" type="secondary" icon="logo-facebook" onPress={() => { }} />
+        <CustomButton
+          title="Google"
+          type="secondary"
+          icon="logo-google"
+          onPress={() => { }}
+          style={styles.socialBtn}
+          textStyle={styles.socialBtnText}
+        />
+        <CustomButton
+          title="Facebook"
+          type="secondary"
+          icon="logo-facebook"
+          onPress={() => { }}
+          style={styles.socialBtn}
+          textStyle={styles.socialBtnText}
+        />
       </View>
       <View style={styles.bottomRow}>
         <Text style={styles.bottomText}>Chưa có tài khoản?</Text>
@@ -101,6 +121,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 10,
+  },
+  socialBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginHorizontal: 2,
+  },
+  socialBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+  },
+  loginBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  loginBtnText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.2,
   },
   bottomRow: {
     flexDirection: 'row',

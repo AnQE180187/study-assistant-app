@@ -8,6 +8,13 @@ interface User {
   id: string;
   email: string;
   name: string;
+  avatar?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  role: string;
+  language: string;
+  theme: string;
+  createdAt: string;
 }
 
 interface AuthContextType {
@@ -61,14 +68,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         id: response.id,
         email: response.email,
-        name: response.name
+        name: response.name,
+        role: response.role || 'student',
+        language: 'vi',
+        theme: 'light',
+        createdAt: new Date().toISOString(),
       });
       
       await AsyncStorage.setItem('token', response.token);
       await AsyncStorage.setItem('user', JSON.stringify({
         id: response.id,
         email: response.email,
-        name: response.name
+        name: response.name,
+        role: response.role || 'student',
+        language: 'vi',
+        theme: 'light',
+        createdAt: new Date().toISOString(),
       }));
       
     } catch (error: any) {
@@ -88,14 +103,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         id: response.id,
         email: response.email,
-        name: response.name
+        name: response.name,
+        role: response.role || 'student',
+        language: 'vi',
+        theme: 'light',
+        createdAt: new Date().toISOString(),
       });
       
       await AsyncStorage.setItem('token', response.token);
       await AsyncStorage.setItem('user', JSON.stringify({
         id: response.id,
         email: response.email,
-        name: response.name
+        name: response.name,
+        role: response.role || 'student',
+        language: 'vi',
+        theme: 'light',
+        createdAt: new Date().toISOString(),
       }));
       
     } catch (error: any) {

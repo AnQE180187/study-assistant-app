@@ -9,12 +9,14 @@ type Props = {
   type?: 'primary' | 'secondary';
   icon?: string;
   disabled?: boolean;
+  style?: any;
+  textStyle?: any;
 };
-//.
-const CustomButton: React.FC<Props> = ({ title, onPress, type = 'primary', icon, disabled }) => {
+
+const CustomButton: React.FC<Props> = ({ title, onPress, type = 'primary', icon, disabled, style, textStyle }) => {
   return (
     <TouchableOpacity
-      style={[styles.button, type === 'secondary' && styles.secondary, disabled && styles.disabled]}
+      style={[styles.button, type === 'secondary' && styles.secondary, disabled && styles.disabled, style]}
       onPress={disabled ? undefined : onPress}
       activeOpacity={0.8}
       disabled={disabled}
@@ -22,7 +24,7 @@ const CustomButton: React.FC<Props> = ({ title, onPress, type = 'primary', icon,
       {icon && (
         <Ionicons name={icon as any} size={20} color={type === 'primary' ? '#fff' : COLORS.primary} style={{ marginRight: 8 }} />
       )}
-      <Text style={[styles.text, type === 'secondary' && styles.textSecondary, disabled && styles.textDisabled]}>{title}</Text>
+      <Text style={[styles.text, type === 'secondary' && styles.textSecondary, disabled && styles.textDisabled, textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
 };

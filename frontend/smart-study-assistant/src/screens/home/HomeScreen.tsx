@@ -1,71 +1,153 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, FlatList, TouchableOpacity } from 'react-native';
-import { COLORS, SIZES } from '../../constants/themes';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../contexts/ThemeContext';
 import NoteCard from '../../components/NoteCard';
 import DeckCard from '../../components/DeckCard';
 import { Ionicons } from '@expo/vector-icons';
-
-const notes = [
-  { title: 'Toán tích phân', tag: 'Toán', date: '2024-06-01' },
-  { title: 'Lý thuyết Dao động', tag: 'Vật lý', date: '2024-05-30' },
-  { title: 'Hóa hữu cơ', tag: 'Hóa', date: '2024-05-28' },
-];
-
-const decks = [
-  { name: 'Từ vựng IELTS', count: 50, isPublic: true },
-  { name: 'Công thức Vật lý', count: 30, isPublic: true },
-  { name: 'Lịch sử Việt Nam', count: 20, isPublic: true },
-];
+import { getNotes, Note } from '../../services/notesService';
+import { getDecks, Deck, getPublicDecks } from '../../services/deckService';
+import { getStudyPlans, StudyPlan } from '../../services/studyPlanService';
+import { AuthContext } from '../../contexts/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 const HomeScreen = ({ navigation }: any) => {
+  const { t } = useTranslation();
+  const { currentTheme } = useTheme();
+  const { user } = useContext<any>(AuthContext);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [plan, setPlan] = useState<StudyPlan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [])
+  );
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // Lấy notes mới nhất
+      const fetchedNotes = await getNotes({ sortBy: 'createdAt', sortOrder: 'desc' });
+      setNotes(fetchedNotes.slice(0, 3));
+      // Lấy decks public
+      const fetchedDecks = await getPublicDecks();
+      setDecks(fetchedDecks.slice(0, 3));
+      // Lấy study plan tiếp theo (chưa hoàn thành, ngày hôm nay trở đi)
+      const today = new Date().toISOString().slice(0, 10);
+      const plans = await getStudyPlans(today);
+      const nextPlan = plans.find((p: StudyPlan) => !p.completed) || plans[0] || null;
+      setPlan(nextPlan);
+    } catch (err: any) {
+      setError(t('home.errorLoading'));
+      Alert.alert(t('common.error'), err.message || t('home.errorLoading'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={[styles.container, { backgroundColor: currentTheme.colors.background }]} contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.hello}>Xin chào,</Text>
-          <Text style={styles.name}>Nguyễn Văn A</Text>
+          <Text style={[styles.hello, { color: currentTheme.colors.textSecondary }]}>{t('home.hello')}</Text>
+          <Text style={[styles.name, { color: currentTheme.colors.primary }]}>{user?.name || t('home.user')}</Text>
         </View>
         <TouchableOpacity>
           {/* <Image source={require('../../assets/icon.png')} style={styles.avatar} /> */}
         </TouchableOpacity>
       </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Kế hoạch học tiếp theo</Text>
-        <View style={styles.planCard}>
-          <Ionicons name="calendar-outline" size={28} color={COLORS.primary} style={{ marginRight: 12 }} />
-          <View>
-            <Text style={styles.planTitle}>Ôn tập Toán - 20:00 hôm nay</Text>
-            <Text style={styles.planDesc}>Chủ đề: Tích phân, 30 phút</Text>
+      {loading ? (
+        <View style={{ alignItems: 'center', marginTop: 40 }}>
+          <ActivityIndicator size="large" color={currentTheme.colors.primary} />
+          <Text style={[styles.loadingText, { color: currentTheme.colors.textSecondary }]}>{t('home.loading')}</Text>
+        </View>
+      ) : error ? (
+        <View style={{ alignItems: 'center', marginTop: 40 }}>
+          <Text style={[styles.errorText, { color: currentTheme.colors.error }]}>{error}</Text>
+          <TouchableOpacity onPress={fetchData} style={[styles.retryButton, { backgroundColor: currentTheme.colors.primary }]}>
+            <Text style={[styles.retryText, { color: currentTheme.colors.onPrimary }]}>{t('home.retry')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {/* Kế hoạch học tiếp theo */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: currentTheme.colors.text }]}>{t('home.nextStudyPlan')}</Text>
+            {plan ? (
+              <View style={[styles.planCard, { backgroundColor: currentTheme.colors.card }]}>
+                <Ionicons name="calendar-outline" size={28} color={currentTheme.colors.primary} style={{ marginRight: 12 }} />
+                <View>
+                  <Text style={[styles.planTitle, { color: currentTheme.colors.text }]}>{plan.title} - {plan.startTime} - {plan.endTime}</Text>
+                  <Text style={[styles.planDesc, { color: currentTheme.colors.textSecondary }]}>{plan.note || ''}</Text>
+                </View>
+                <TouchableOpacity style={[styles.startBtn, { backgroundColor: currentTheme.colors.primary }]} onPress={() => navigation.navigate('Planner')}>
+                  <Text style={[styles.startText, { color: currentTheme.colors.onPrimary }]}>{t('home.start')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Text style={[styles.noPlanText, { color: currentTheme.colors.textSecondary }]}>{t('home.noStudyPlan')}</Text>
+            )}
           </View>
-          <TouchableOpacity style={styles.startBtn}><Text style={styles.startText}>Bắt đầu</Text></TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.section}>
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Ghi chú gần đây</Text>
-          <TouchableOpacity><Text style={styles.link}>Xem tất cả</Text></TouchableOpacity>
-        </View>
-        {notes.slice(0, 3).map((n, i) => (
-          <NoteCard key={i} title={n.title} tag={n.tag} date={n.date} onEdit={() => { }} onDelete={() => { }} />
-        ))}
-      </View>
-      <View style={styles.section}>
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Bộ flashcard nổi bật</Text>
-          <TouchableOpacity><Text style={styles.link}>Xem tất cả</Text></TouchableOpacity>
-        </View>
-        <FlatList
-          data={decks}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(_, i) => i.toString()}
-          renderItem={({ item }) => (
-            <View style={{ width: 220, marginRight: 12 }}>
-              <DeckCard name={item.name} count={item.count} isPublic={item.isPublic} onPress={() => { }} />
+          {/* Notes gần đây */}
+          <View style={styles.section}>
+            <View style={styles.sectionRow}>
+              <Text style={[styles.sectionTitle, { color: currentTheme.colors.text }]}>{t('home.recentNotes')}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Notes')}><Text style={[styles.link, { color: currentTheme.colors.primary }]}>{t('home.viewAll')}</Text></TouchableOpacity>
             </View>
-          )}
-        />
-      </View>
+            {notes.length === 0 ? (
+              <Text style={[styles.noDataText, { color: currentTheme.colors.textSecondary }]}>{t('home.noNotes')}</Text>
+            ) : (
+              notes.map((n, i) => (
+                <NoteCard
+                  key={n.id}
+                  title={n.title}
+                  description={n.description}
+                  content={n.content}
+                  tags={n.tags}
+                  category={n.category}
+                  priority={n.priority}
+                  color={n.color}
+                  isPinned={n.isPinned}
+                  isPublic={n.isPublic}
+                  createdAt={n.createdAt}
+                  onPress={() => navigation.navigate('NoteEditor', { noteId: n.id })}
+                />
+              ))
+            )}
+          </View>
+          {/* Deck nổi bật */}
+          <View style={styles.section}>
+            <View style={styles.sectionRow}>
+              <Text style={[styles.sectionTitle, { color: currentTheme.colors.text }]}>{t('home.featuredDecks')}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Flashcards', { tab: 'public' })}><Text style={[styles.link, { color: currentTheme.colors.primary }]}>{t('home.viewAll')}</Text></TouchableOpacity>
+            </View>
+            <FlatList
+              data={decks}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={{ width: 220, marginRight: 12 }}>
+                  <DeckCard
+                    name={item.title}
+                    count={item.flashcards ? item.flashcards.length : 0}
+                    isPublic={item.isPublic}
+                    onStudy={() => navigation.navigate('FlashcardPractice', { deckId: item.id, title: item.title, isPublic: true })}
+                    description={item.description}
+                    tags={item.tags}
+                    hideManageBtn={true}
+                  />
+                </View>
+              )}
+            />
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 };
@@ -73,8 +155,7 @@ const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SIZES.padding,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
@@ -83,11 +164,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   hello: {
-    color: COLORS.textSecondary,
     fontSize: 16,
   },
   name: {
-    color: COLORS.primary,
     fontSize: 22,
     fontWeight: 'bold',
   },
@@ -95,7 +174,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.primaryLight,
   },
   section: {
     marginBottom: 28,
@@ -103,7 +181,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 10,
   },
   sectionRow: {
@@ -113,44 +190,52 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   link: {
-    color: COLORS.primary,
     fontWeight: 'bold',
   },
   planCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: SIZES.radius,
-    padding: 18,
-    ...SIZES,
-    marginBottom: 8,
-    ...{
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 2,
-    },
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 8,
+    elevation: 2,
   },
   planTitle: {
-    fontWeight: 'bold',
     fontSize: 16,
-    color: COLORS.text,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   planDesc: {
-    color: COLORS.textSecondary,
     fontSize: 14,
   },
   startBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 8,
+    borderRadius: 8,
     marginLeft: 'auto',
   },
   startText: {
-    color: '#fff',
     fontWeight: 'bold',
+  },
+  loadingText: {
+    marginTop: 12,
+  },
+  errorText: {
+    fontSize: 16,
+  },
+  retryButton: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    fontWeight: 'bold',
+  },
+  noPlanText: {
+    marginTop: 8,
+  },
+  noDataText: {
+    marginTop: 8,
   },
 });
 

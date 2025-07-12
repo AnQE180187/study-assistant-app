@@ -5,13 +5,14 @@ const prisma = require('../config/prismaClient');
 // @access  Private
 const createStudyPlan = async (req, res) => {
   try {
-    const { title, date, time, note } = req.body;
+    const { title, date, startTime, endTime, note } = req.body;
     const userId = req.user.id;
     const plan = await prisma.studyPlan.create({
       data: { 
         title, 
         date: new Date(date), 
-        time, 
+        startTime: startTime || '09:00', 
+        endTime: endTime || '10:00', 
         note: note || '',
         userId 
       },
@@ -43,11 +44,63 @@ const getStudyPlans = async (req, res) => {
       };
     }
     
+    // Lấy plans với xử lý backward compatibility
     const plans = await prisma.studyPlan.findMany({
       where: whereClause,
-      orderBy: { date: 'asc' },
+      orderBy: [
+        { date: 'asc' }
+      ],
     });
-    res.json(plans);
+    
+    // Xử lý dữ liệu để đảm bảo có startTime và endTime
+    const processedPlans = plans.map(plan => {
+      // Nếu có startTime và endTime thì dùng
+      if (plan.startTime && plan.endTime) {
+        return plan;
+      }
+      
+      // Nếu có time cũ thì chuyển đổi
+      if (plan.time) {
+        const oldTime = plan.time;
+        let startTime = '09:00';
+        let endTime = '10:00';
+        
+        if (oldTime.includes(':')) {
+          const [hours, minutes] = oldTime.split(':');
+          const startHour = parseInt(hours);
+          const startMinute = parseInt(minutes);
+          
+          // Tạo endTime bằng cách cộng thêm 1 giờ
+          const endHour = startHour + 1;
+          const endMinute = startMinute;
+          
+          startTime = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+          endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+        }
+        
+        return {
+          ...plan,
+          startTime,
+          endTime
+        };
+      }
+      
+      // Fallback
+      return {
+        ...plan,
+        startTime: '09:00',
+        endTime: '10:00'
+      };
+    });
+    
+    // Sắp xếp theo startTime
+    processedPlans.sort((a, b) => {
+      const timeA = new Date(`2000-01-01T${a.startTime}`);
+      const timeB = new Date(`2000-01-01T${b.startTime}`);
+      return timeA.getTime() - timeB.getTime();
+    });
+    
+    res.json(processedPlans);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -72,7 +125,7 @@ const getStudyPlanById = async (req, res) => {
 // @access  Private
 const updateStudyPlan = async (req, res) => {
   try {
-    const { title, date, time, note, completed } = req.body;
+    const { title, date, startTime, endTime, note, completed } = req.body;
     const plan = await prisma.studyPlan.findUnique({ where: { id: req.params.id } });
     if (!plan) return res.status(404).json({ message: 'Study plan not found' });
     if (plan.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
@@ -81,7 +134,8 @@ const updateStudyPlan = async (req, res) => {
       data: { 
         title, 
         date: new Date(date), 
-        time, 
+        startTime: startTime || plan.startTime || '09:00', 
+        endTime: endTime || plan.endTime || '10:00', 
         note: note || '',
         completed: completed !== undefined ? completed : plan.completed
       },
@@ -123,7 +177,10 @@ const getStudyPlansByRange = async (req, res) => {
           lte: new Date(endDate),
         },
       },
-      orderBy: { date: 'asc' },
+      orderBy: [
+        { date: 'asc' },
+        { startTime: 'asc' }
+      ],
     });
     res.json(plans);
   } catch (error) {

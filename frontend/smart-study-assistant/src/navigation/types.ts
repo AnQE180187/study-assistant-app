@@ -55,6 +55,14 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Welcome: undefined;
+  VerifyOtp: {
+    email: string;
+    password: string;
+  };
+  ResetPassword: {
+    email: string;
+    otp: string;
+  };
 };
 
 declare global {

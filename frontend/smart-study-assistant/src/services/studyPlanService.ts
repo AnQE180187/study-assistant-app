@@ -4,7 +4,8 @@ export interface StudyPlan {
   id: string;
   title: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   note?: string;
   completed: boolean;
   userId: string;
@@ -22,14 +23,16 @@ export interface StudyPlanStats {
 export interface CreateStudyPlanData {
   title: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   note?: string;
 }
 
 export interface UpdateStudyPlanData {
   title?: string;
   date?: string;
-  time?: string;
+  startTime?: string;
+  endTime?: string;
   note?: string;
   completed?: boolean;
 }

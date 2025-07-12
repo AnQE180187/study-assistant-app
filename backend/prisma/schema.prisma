@@ -18,6 +18,13 @@ model User {
   email         String       @unique
   password      String
   role          String       @default("student") // student, teacher, admin
+  avatar        String?      // URL to avatar image
+  dateOfBirth   DateTime?    // Date of birth
+  gender        String?      // male, female, other
+  language      String       @default("vi") // vi, en
+  theme         String       @default("light") // light, dark
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   notes         Note[]
@@ -25,8 +32,8 @@ model User {
   studyPlans    StudyPlan[]
   progress      Progress[]
   decks         Deck[]
-  resetPasswordToken   String?
-  resetPasswordExpires DateTime?
+  isVerified    Boolean      @default(false)
+  verifyToken   String?
 }
 
 model Note {
@@ -75,7 +82,9 @@ model StudyPlan {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   date        DateTime
-  time        String
+  time        String?  // Giữ lại để backward compatibility
+  startTime   String?  // Format: "HH:mm"
+  endTime     String?  // Format: "HH:mm"
   note        String?
   completed   Boolean  @default(false)
   userId      String   @db.ObjectId
@@ -93,4 +102,12 @@ model Progress {
   score       Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+} 
+
+model Otp {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 } 

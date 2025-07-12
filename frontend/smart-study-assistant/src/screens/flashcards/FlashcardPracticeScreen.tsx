@@ -12,19 +12,22 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES } from '../../constants/themes';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   Flashcard,
-  getFlashcardsByNote,
+  getFlashcardsByDeck,
+  getPublicFlashcardsByDeck,
 } from "../../services/flashcardService";
 
 const { width, height } = Dimensions.get("window");
 
 type FlashcardStackParamList = {
   FlashcardPractice: {
-    noteId: string;
+    deckId: string;
     title: string;
     flashcards?: Flashcard[];
+    isPublic?: boolean;
   };
 };
 
@@ -35,17 +38,20 @@ type NavigationProp = StackNavigationProp<
 type RouteProp1 = RouteProp<FlashcardStackParamList, "FlashcardPractice">;
 
 interface RouteParams {
-  noteId: string;
+  deckId: string;
   title: string;
   flashcards?: Flashcard[];
+  isPublic?: boolean;
 }
 
 type DifficultyRating = "easy" | "medium" | "hard";
 
 const FlashcardPracticeScreen: React.FC = () => {
+  const { t } = useTranslation();
+  const { currentTheme } = useTheme();
   const route = useRoute<RouteProp1>();
   const navigation = useNavigation<NavigationProp>();
-  const { noteId, title, flashcards: routeFlashcards } = route.params;
+  const { deckId, title, flashcards: routeFlashcards, isPublic } = route.params;
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
@@ -68,10 +74,15 @@ const FlashcardPracticeScreen: React.FC = () => {
   const loadFlashcards = async () => {
     setLoading(true);
     try {
-      const cards = await getFlashcardsByNote(noteId);
+      let cards;
+      if (isPublic) {
+        cards = await getPublicFlashcardsByDeck(deckId);
+      } else {
+        cards = await getFlashcardsByDeck(deckId);
+      }
       setFlashcards(cards);
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải flashcards");
+    } catch (error: any) {
+      Alert.alert(t('flashcards.error'), error.message || t('flashcards.loadError'));
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -149,21 +160,16 @@ const FlashcardPracticeScreen: React.FC = () => {
   };
 
   const showCompletionSummary = () => {
-    const easyCards = Object.values(ratings).filter((r) => r === "easy").length;
-    const mediumCards = Object.values(ratings).filter(
-      (r) => r === "medium"
-    ).length;
-    const hardCards = Object.values(ratings).filter((r) => r === "hard").length;
+    const correctAnswers = Object.values(results).filter((result) => result === 'correct').length;
+    const totalQuestions = flashcards.length;
+    const correctPercentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
 
     Alert.alert(
-      "Hoàn thành!",
-      `Bạn đã hoàn thành ${completedCards.size}/${flashcards.length} thẻ\n\n` +
-        `Dễ: ${easyCards} thẻ\n` +
-        `Trung bình: ${mediumCards} thẻ\n` +
-        `Khó: ${hardCards} thẻ`,
+      t('flashcards.completed'),
+      t('flashcards.result', { correct: correctAnswers, total: totalQuestions, percentage: correctPercentage }),
       [
-        { text: "Luyện lại", onPress: resetSession },
-        { text: "Quay lại", onPress: () => navigation.goBack() },
+        { text: t('flashcards.practiceAgain'), onPress: resetSession },
+        { text: t('flashcards.goBack'), onPress: () => navigation.goBack() },
       ]
     );
   };
@@ -171,102 +177,137 @@ const FlashcardPracticeScreen: React.FC = () => {
     setCurrentIndex(0);
     setCompletedCards(new Set());
     setRatings({});
+    setResults({});
     setShowBack(false);
     flipAnim.setValue(0);
   };
 
   const handleExit = () => {
-    Alert.alert("Thoát luyện tập?", "Tiến độ của bạn sẽ không được lưu lại", [
-      { text: "Hủy", style: "cancel" },
-      { text: "Thoát", onPress: () => navigation.goBack() },
+    Alert.alert(t('flashcards.exitConfirm'), t('flashcards.exitWarning'), [
+      { text: t('common.cancel'), style: "cancel" },
+      { text: t('flashcards.exit'), onPress: () => navigation.goBack() },
     ]);
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Đang tải...</Text>
+      <View style={[styles.container, { backgroundColor: currentTheme.colors.background }]}>
+        <Text style={[styles.loadingText, { color: currentTheme.colors.textSecondary }]}>{t('flashcards.loading')}</Text>
       </View>
     );
   }
   if (flashcards.length === 0) {
     return (
-      <View style={styles.container}>
-        
-        <Text style={styles.emptyText}>
-          Không có flashcard nào để luyện tập
+      <View style={[styles.container, { backgroundColor: currentTheme.colors.background }]}>
+        <Text style={[styles.emptyText, { color: currentTheme.colors.textSecondary }]}>
+          {t('flashcards.noFlashcards')}
         </Text>
         <TouchableOpacity
-          style={[
-            styles.emptyBackButton,
-            {
-              backgroundColor: "#FFA726",
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 24,
-            },
-          ]}
+          style={[styles.backButton, { backgroundColor: currentTheme.colors.primary }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>Quay lại</Text>
+          <Text style={styles.backButtonText}>{t('flashcards.goBack')}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: currentTheme.colors.background }]}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleExit} style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
+        <TouchableOpacity onPress={handleExit} style={styles.exitButton}>
+          <Ionicons name="close" size={24} color={currentTheme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
-        <TouchableOpacity onPress={handleShuffle} style={styles.iconBtn}>
-          <Ionicons name="shuffle" size={24} color={COLORS.primary} />
+        <Text style={[styles.title, { color: currentTheme.colors.text }]} numberOfLines={1}>{title}</Text>
+        <TouchableOpacity onPress={handleShuffle} style={styles.shuffleButton}>
+          <Ionicons name="shuffle" size={24} color={currentTheme.colors.primary} />
         </TouchableOpacity>
       </View>
-      <View style={styles.cardWrap}>
-        <TouchableOpacity activeOpacity={0.9} onPress={flipCard}>
-          <View style={{ width: width * 0.8, height: height * 0.5 }}>
-            {/* Mặt trước */}
-            <Animated.View style={[styles.card, {
-              transform: [{ rotateY: frontInterpolate }],
-              opacity: frontOpacity,
-              zIndex: showBack ? 0 : 1,
-            }]}> 
-              <Text style={styles.cardText}>{currentCard.question}</Text>
-            </Animated.View>
-            {/* Mặt sau */}
-            <Animated.View style={[styles.card, styles.cardBack, {
-              transform: [{ rotateY: backInterpolate }],
-              opacity: backOpacity,
-              zIndex: showBack ? 1 : 0,
-            }]}> 
-              <Text style={styles.cardText}>{currentCard.answer}</Text>
-            </Animated.View>
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.flipHint}>Chạm vào thẻ để lật</Text>
+
+      {/* Progress */}
+      <View style={styles.progressContainer}>
+        <Text style={[styles.progressText, { color: currentTheme.colors.text }]}>{progress}</Text>
+        <View style={[styles.progressBar, { backgroundColor: currentTheme.colors.border }]}>
+          <View 
+            style={[
+              styles.progressFill, 
+              { 
+                width: `${((currentIndex + 1) / flashcards.length) * 100}%`,
+                backgroundColor: currentTheme.colors.primary
+              }
+            ]} 
+          />
+        </View>
       </View>
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.actionBtn} onPress={handlePrev} disabled={currentIndex === 0}>
-          <Ionicons name="arrow-back" size={22} color={currentIndex === 0 ? COLORS.border : COLORS.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.resultBtn, { backgroundColor: COLORS.success }]} onPress={() => handleResult('correct')}>
-          <Ionicons name="checkmark" size={22} color="#fff" />
-          <Text style={styles.resultText}>Đúng</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.resultBtn, { backgroundColor: COLORS.error }]} onPress={() => handleResult('wrong')}>
-          <Ionicons name="close" size={22} color="#fff" />
-          <Text style={styles.resultText}>Sai</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleNext} disabled={currentIndex === flashcards.length - 1}>
-          <Ionicons name="arrow-forward" size={22} color={currentIndex === flashcards.length - 1 ? COLORS.border : COLORS.primary} />
+
+      {/* Flashcard */}
+      <View style={styles.cardContainer}>
+        <TouchableOpacity onPress={flipCard} style={styles.cardWrapper}>
+          <Animated.View
+            style={[
+              styles.card,
+              styles.cardFront,
+              { backgroundColor: currentTheme.colors.card },
+              {
+                transform: [{ rotateY: frontInterpolate }],
+                opacity: frontOpacity,
+              },
+            ]}
+          >
+            <Text style={[styles.cardText, { color: currentTheme.colors.text }]}>{currentCard?.term}</Text>
+            <Text style={[styles.cardHint, { color: currentTheme.colors.textSecondary }]}>{t('flashcards.pressToShowDefinition')}</Text>
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.card,
+              styles.cardBack,
+              { backgroundColor: currentTheme.colors.primary },
+              {
+                transform: [{ rotateY: backInterpolate }],
+                opacity: backOpacity,
+              },
+            ]}
+          >
+            <Text style={[styles.cardText, { color: currentTheme.colors.onPrimary }]}>{currentCard?.definition}</Text>
+            <Text style={[styles.cardHint, { color: currentTheme.colors.onPrimary + '80' }]}>{t('flashcards.pressToShowTerm')}</Text>
+          </Animated.View>
         </TouchableOpacity>
       </View>
-      <Text style={styles.progress}>{progress}</Text>
+
+      {/* Navigation */}
+      <View style={styles.navigation}>
+        <TouchableOpacity
+          onPress={handlePrev}
+          disabled={currentIndex === 0}
+          style={[styles.navButton, { backgroundColor: currentTheme.colors.card }, currentIndex === 0 && styles.navButtonDisabled]}
+        >
+          <Ionicons name="chevron-back" size={24} color={currentIndex === 0 ? currentTheme.colors.textSecondary : currentTheme.colors.text} />
+        </TouchableOpacity>
+        
+        <View style={styles.resultButtons}>
+          <TouchableOpacity
+            style={[styles.resultButton, styles.wrongButton]}
+            onPress={() => handleResult('wrong')}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.resultButton, styles.correctButton]}
+            onPress={() => handleResult('correct')}
+          >
+            <Ionicons name="checkmark" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        
+        <TouchableOpacity
+          onPress={handleNext}
+          disabled={currentIndex === flashcards.length - 1}
+          style={[styles.navButton, { backgroundColor: currentTheme.colors.card }, currentIndex === flashcards.length - 1 && styles.navButtonDisabled]}
+        >
+          <Ionicons name="chevron-forward" size={24} color={currentIndex === flashcards.length - 1 ? currentTheme.colors.textSecondary : currentTheme.colors.text} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -274,117 +315,145 @@ const FlashcardPracticeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SIZES.padding,
-    justifyContent: 'center',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  backText: {
-    fontSize: 24,
-    color: "#333",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
   },
   title: {
     flex: 1,
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
+    textAlign: "center",
+    marginHorizontal: 16,
   },
-  iconBtn: {
+  exitButton: {
     padding: 8,
   },
-  cardWrap: {
-    alignItems: 'center',
-    marginBottom: 24,
+  shuffleButton: {
+    padding: 8,
+  },
+  progressContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  progressText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 4,
+    borderRadius: 2,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  cardWrapper: {
+    width: "100%",
+    height: 300,
   },
   card: {
-    width: width * 0.8,
-    height: height * 0.5,
-    backgroundColor: COLORS.card,
-    borderRadius: SIZES.radius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    width: "100%",
+    height: "100%",
+    borderRadius: 16,
+    padding: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
-    position: 'absolute',
-    backfaceVisibility: 'hidden',
-    padding: 20,
+    elevation: 4,
+    backfaceVisibility: "hidden",
+  },
+  cardFront: {
+    position: "absolute",
   },
   cardBack: {
-    backgroundColor: COLORS.primaryLight,
+    position: "absolute",
   },
   cardText: {
-    fontSize: 26,
-    color: COLORS.text,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    paddingHorizontal: 12,
+    fontSize: 20,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 28,
   },
-  flipHint: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    marginTop: 10,
+  cardHint: {
+    fontSize: 14,
+    marginTop: 16,
+    textAlign: "center",
   },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
+  navigation: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
-  actionBtn: {
+  navButton: {
     padding: 12,
-    borderRadius: 999,
-    backgroundColor: COLORS.card,
-    marginHorizontal: 8,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  resultBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    marginHorizontal: 8,
+  navButtonDisabled: {
+    opacity: 0.5,
   },
-  resultText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontSize: 16,
+  resultButtons: {
+    flexDirection: "row",
+    gap: 16,
   },
-  progress: {
-    color: COLORS.primary,
-    fontWeight: 'bold',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 20,
+  resultButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  wrongButton: {
+    backgroundColor: "#ff4757",
+  },
+  correctButton: {
+    backgroundColor: "#2ed573",
   },
   loadingText: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 18,
     textAlign: "center",
   },
   emptyText: {
     fontSize: 18,
-    color: "#666",
     textAlign: "center",
     marginBottom: 20,
   },
-  emptyBackButton: {
-    alignSelf: "center",
+  backButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
   },
   backButtonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "600",
   },
 });

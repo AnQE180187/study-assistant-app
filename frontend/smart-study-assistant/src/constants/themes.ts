@@ -1,18 +1,80 @@
 import colors from './colors';
 
 export const lightTheme = {
-  background: colors.background,
-  text: colors.text,
-  card: colors.card,
-  primary: colors.primary,
+  colors: {
+    primary: '#6200EE',
+    primaryVariant: '#3700B3',
+    secondary: '#03DAC6',
+    secondaryVariant: '#018786',
+    background: '#F5F6FA',
+    surface: '#FFFFFF',
+    error: '#B00020',
+    onPrimary: '#FFFFFF',
+    onSecondary: '#000000',
+    onBackground: '#000000',
+    onSurface: '#000000',
+    onError: '#FFFFFF',
+    text: '#000000',
+    textSecondary: '#666666',
+    border: '#E0E0E0',
+    card: '#FFFFFF',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    info: '#2196F3',
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  borderRadius: {
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
+  },
 };
-//.
+
 export const darkTheme = {
-  background: '#181A20',
-  text: '#fff',
-  card: '#23262F',
-  primary: colors.primary,
+  colors: {
+    primary: '#BB86FC',
+    primaryVariant: '#3700B3',
+    secondary: '#03DAC6',
+    secondaryVariant: '#018786',
+    background: '#121212',
+    surface: '#1E1E1E',
+    error: '#CF6679',
+    onPrimary: '#000000',
+    onSecondary: '#000000',
+    onBackground: '#FFFFFF',
+    onSurface: '#FFFFFF',
+    onError: '#000000',
+    text: '#FFFFFF',
+    textSecondary: '#B0B0B0',
+    border: '#333333',
+    card: '#2D2D2D',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    info: '#2196F3',
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  borderRadius: {
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
+  },
 };
+
+export type Theme = typeof lightTheme;
 
 export const COLORS = {
   primary: '#8B5CF6', // tím vừa
