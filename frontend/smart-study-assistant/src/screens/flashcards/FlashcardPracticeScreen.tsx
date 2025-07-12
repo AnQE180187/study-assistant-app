@@ -229,14 +229,14 @@ const FlashcardPracticeScreen: React.FC = () => {
       <View style={styles.progressContainer}>
         <Text style={[styles.progressText, { color: currentTheme.colors.text }]}>{progress}</Text>
         <View style={[styles.progressBar, { backgroundColor: currentTheme.colors.border }]}>
-          <View 
+          <View
             style={[
-              styles.progressFill, 
-              { 
+              styles.progressFill,
+              {
                 width: `${((currentIndex + 1) / flashcards.length) * 100}%`,
                 backgroundColor: currentTheme.colors.primary
               }
-            ]} 
+            ]}
           />
         </View>
       </View>
@@ -284,7 +284,7 @@ const FlashcardPracticeScreen: React.FC = () => {
         >
           <Ionicons name="chevron-back" size={24} color={currentIndex === 0 ? currentTheme.colors.textSecondary : currentTheme.colors.text} />
         </TouchableOpacity>
-        
+
         <View style={styles.resultButtons}>
           <TouchableOpacity
             style={[styles.resultButton, styles.wrongButton]}
@@ -299,7 +299,7 @@ const FlashcardPracticeScreen: React.FC = () => {
             <Ionicons name="checkmark" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-        
+
         <TouchableOpacity
           onPress={handleNext}
           disabled={currentIndex === flashcards.length - 1}

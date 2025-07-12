@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -49,21 +51,21 @@ const StudyPlanScreen = ({ navigation }: any) => {
     const currentMinute = Math.floor(now.getMinutes() / 30) * 30;
     const currentTime = `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
     const nextTime = `${currentHour}:${(currentMinute + 30).toString().padStart(2, '0')}`;
-    
+
     setTemp({ title: '', startTime: currentTime, endTime: nextTime, note: '' });
     setModal({ type: 'add' });
   };
-  
+
   const openEdit = (i: number) => {
-    setTemp({ 
-      title: sessions[i].title, 
-      startTime: sessions[i].startTime, 
-      endTime: sessions[i].endTime, 
-      note: sessions[i].note || '' 
+    setTemp({
+      title: sessions[i].title,
+      startTime: sessions[i].startTime,
+      endTime: sessions[i].endTime,
+      note: sessions[i].note || ''
     });
     setModal({ type: 'edit', index: i });
   };
-  
+
   const openDelete = (i: number) => setModal({ type: 'delete', index: i });
   const closeModal = () => setModal({ type: null });
 
@@ -82,7 +84,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
       Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
       return;
     }
-    
+
     setOperationLoading(true);
     try {
       const newPlan = await createStudyPlan({
@@ -101,13 +103,13 @@ const StudyPlanScreen = ({ navigation }: any) => {
       setOperationLoading(false);
     }
   };
-  
+
   const handleEdit = async () => {
     if (!temp.title.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
       return;
     }
-    
+
     if (modal.index !== undefined && sessions[modal.index]) {
       setOperationLoading(true);
       try {
@@ -129,7 +131,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
       }
     }
   };
-  
+
   const handleDelete = async () => {
     if (modal.index !== undefined && sessions[modal.index]) {
       setOperationLoading(true);
@@ -149,7 +151,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
   const handleToggleCompletion = async (session: StudyPlan) => {
     try {
       const updated = await toggleStudyPlanCompletion(session.id);
-      const newSessions = sessions.map(s => 
+      const newSessions = sessions.map(s =>
         s.id === session.id ? updated : s
       );
       setSessions(newSessions);
@@ -169,14 +171,14 @@ const StudyPlanScreen = ({ navigation }: any) => {
 
   const renderSession = ({ item, index }: { item: StudyPlan; index: number }) => (
     <View style={[styles.sessionCard, item.completed && styles.completedSession]}>
-      <TouchableOpacity 
-        style={styles.completionButton} 
+      <TouchableOpacity
+        style={styles.completionButton}
         onPress={() => handleToggleCompletion(item)}
       >
-        <Ionicons 
-          name={item.completed ? "checkmark-circle" : "ellipse-outline"} 
-          size={24} 
-          color={item.completed ? currentTheme.colors.primary : currentTheme.colors.textSecondary} 
+        <Ionicons
+          name={item.completed ? "checkmark-circle" : "ellipse-outline"}
+          size={24}
+          color={item.completed ? currentTheme.colors.primary : currentTheme.colors.textSecondary}
         />
       </TouchableOpacity>
       <View style={styles.sessionContent}>
@@ -218,13 +220,13 @@ const StudyPlanScreen = ({ navigation }: any) => {
       <Calendar
         current={selected}
         onDayPress={day => setSelected(day.dateString)}
-        markedDates={{ 
+        markedDates={{
           [selected]: { selected: true, selectedColor: currentTheme.colors.primary },
           ...sessions.reduce((acc, session) => {
             const dateStr = new Date(session.date).toISOString().split('T')[0];
-            acc[dateStr] = { 
-              marked: true, 
-              dotColor: session.completed ? currentTheme.colors.primary : currentTheme.colors.secondary 
+            acc[dateStr] = {
+              marked: true,
+              dotColor: session.completed ? currentTheme.colors.primary : currentTheme.colors.secondary
             };
             return acc;
           }, {} as any)
@@ -237,7 +239,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
         style={styles.calendar}
       />
       <Text style={styles.sectionTitle}>{t('study_plan.sessions_for_day')}</Text>
-      
+
       {sessions.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Ionicons name="calendar-outline" size={64} color={currentTheme.colors.textSecondary} />
@@ -259,11 +261,12 @@ const StudyPlanScreen = ({ navigation }: any) => {
           onRefresh={fetchStudyPlans}
         />
       )}
-      
+
       <TouchableOpacity style={styles.fab} onPress={openAdd} disabled={operationLoading}>
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
-      
+
+
       {/* ModalCard cho Thêm/Sửa/Xóa */}
       <ModalCard
         visible={modal.type === 'add'}
@@ -276,8 +279,8 @@ const StudyPlanScreen = ({ navigation }: any) => {
         extraContent={
           <View style={styles.timeFieldContainer}>
             <Text style={styles.timeFieldLabel}>{t('study_plan.time')}</Text>
-            <TouchableOpacity 
-              style={styles.timeFieldButton} 
+            <TouchableOpacity
+              style={styles.timeFieldButton}
               onPress={() => openTimePicker('start')}
             >
               <Text style={styles.timeFieldText}>{temp.startTime} - {temp.endTime}</Text>
@@ -299,8 +302,8 @@ const StudyPlanScreen = ({ navigation }: any) => {
         extraContent={
           <View style={styles.timeFieldContainer}>
             <Text style={styles.timeFieldLabel}>{t('study_plan.time')}</Text>
-            <TouchableOpacity 
-              style={styles.timeFieldButton} 
+            <TouchableOpacity
+              style={styles.timeFieldButton}
               onPress={() => openTimePicker('start')}
             >
               <Text style={styles.timeFieldText}>{temp.startTime} - {temp.endTime}</Text>
@@ -327,7 +330,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
         initialStartTime={temp.startTime}
         initialEndTime={temp.endTime}
       />
-      
+
       {operationLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={currentTheme.colors.primary} />

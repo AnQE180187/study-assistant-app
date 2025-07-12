@@ -271,13 +271,18 @@ const NotesListScreen = ({ navigation }: any) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Ghi chú của bạn</Text>
+    <View style={[styles.container, { backgroundColor: currentTheme.colors.background }]}>
+      <Text style={[styles.title, { color: currentTheme.colors.text }]}>Ghi chú của bạn</Text>
 
       {/* Search */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, { 
+          backgroundColor: currentTheme.colors.card,
+          color: currentTheme.colors.text,
+          borderColor: currentTheme.colors.border
+        }]}
         placeholder="Tìm kiếm ghi chú..."
+        placeholderTextColor={currentTheme.colors.textSecondary}
         value={search}
         onChangeText={setSearch}
       />
@@ -287,10 +292,10 @@ const NotesListScreen = ({ navigation }: any) => {
         {/* Category filter */}
         <View style={styles.filterSection}>
           <View style={styles.filterHeader}>
-            <Text style={styles.filterLabel}>Danh mục:</Text>
-            <TouchableOpacity onPress={handleAddCategory} style={styles.addCategoryBtn}>
+            <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>Danh mục:</Text>
+            <TouchableOpacity onPress={handleAddCategory} style={[styles.addCategoryBtn, { backgroundColor: currentTheme.colors.primary + '20' }]}>
               <Ionicons name="add" size={16} color={currentTheme.colors.primary} />
-              <Text style={styles.addCategoryText}>Thêm</Text>
+              <Text style={[styles.addCategoryText, { color: currentTheme.colors.primary }]}>Thêm</Text>
             </TouchableOpacity>
           </View>
           <FlatList
@@ -299,10 +304,18 @@ const NotesListScreen = ({ navigation }: any) => {
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.filterBtn, selectedCategory === item && styles.filterBtnActive]}
+                style={[
+                  styles.filterBtn, 
+                  { backgroundColor: currentTheme.colors.primary + '20' },
+                  selectedCategory === item && { backgroundColor: currentTheme.colors.primary }
+                ]}
                 onPress={() => setSelectedCategory(item)}
               >
-                <Text style={[styles.filterText, selectedCategory === item && styles.filterTextActive]}>
+                <Text style={[
+                  styles.filterText, 
+                  { color: currentTheme.colors.primary },
+                  selectedCategory === item && { color: currentTheme.colors.onPrimary }
+                ]}>
                   {item}
                 </Text>
               </TouchableOpacity>
@@ -314,17 +327,25 @@ const NotesListScreen = ({ navigation }: any) => {
 
         {/* Priority filter */}
         <View style={styles.filterSection}>
-          <Text style={styles.filterLabel}>Độ ưu tiên:</Text>
+          <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>Độ ưu tiên:</Text>
           <FlatList
             horizontal
             data={priorities}
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.filterBtn, selectedPriority === item && styles.filterBtnActive]}
+                style={[
+                  styles.filterBtn, 
+                  { backgroundColor: currentTheme.colors.primary + '20' },
+                  selectedPriority === item && { backgroundColor: currentTheme.colors.primary }
+                ]}
                 onPress={() => setSelectedPriority(item)}
               >
-                <Text style={[styles.filterText, selectedPriority === item && styles.filterTextActive]}>
+                <Text style={[
+                  styles.filterText, 
+                  { color: currentTheme.colors.primary },
+                  selectedPriority === item && { color: currentTheme.colors.onPrimary }
+                ]}>
                   {item === t('notes.all') ? t('notes.all') : item}
                 </Text>
               </TouchableOpacity>
@@ -336,15 +357,23 @@ const NotesListScreen = ({ navigation }: any) => {
 
         {/* Pinned filter */}
         <TouchableOpacity
-          style={[styles.pinnedFilter, showPinnedOnly && styles.pinnedFilterActive]}
+          style={[
+            styles.pinnedFilter, 
+            { backgroundColor: currentTheme.colors.primary + '20' },
+            showPinnedOnly && { backgroundColor: currentTheme.colors.primary }
+          ]}
           onPress={() => setShowPinnedOnly(!showPinnedOnly)}
         >
           <Ionicons
             name={showPinnedOnly ? "pin" : "pin-outline"}
             size={16}
-            color={showPinnedOnly ? '#fff' : currentTheme.colors.primary}
+            color={showPinnedOnly ? currentTheme.colors.onPrimary : currentTheme.colors.primary}
           />
-          <Text style={[styles.pinnedFilterText, showPinnedOnly && styles.pinnedFilterTextActive]}>
+          <Text style={[
+            styles.pinnedFilterText, 
+            { color: currentTheme.colors.primary },
+            showPinnedOnly && { color: currentTheme.colors.onPrimary }
+          ]}>
             {t('notes.onlyPinned')}
           </Text>
         </TouchableOpacity>
@@ -358,7 +387,7 @@ const NotesListScreen = ({ navigation }: any) => {
             {loading ? t('notes.loading') : t('notes.noNotes')}
           </Text>
           {!loading && (
-            <TouchableOpacity style={styles.createFirstBtn} onPress={openAdd}>
+            <TouchableOpacity style={[styles.createFirstBtn, { backgroundColor: currentTheme.colors.primary }]} onPress={openAdd}>
               <Text style={styles.createFirstText}>{t('notes.createFirstNote')}</Text>
             </TouchableOpacity>
           )}
@@ -393,7 +422,7 @@ const NotesListScreen = ({ navigation }: any) => {
       )}
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={openAdd}>
+      <TouchableOpacity style={[styles.fab, { backgroundColor: currentTheme.colors.primary }]} onPress={openAdd}>
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
 
@@ -416,6 +445,8 @@ const NotesListScreen = ({ navigation }: any) => {
           },
         ]}
         extraContent={renderTagInput()}
+        isPublic={temp.isPublic}
+        onTogglePublic={() => setTemp(t => ({ ...t, isPublic: !t.isPublic }))}
         isPinned={temp.isPinned}
         onTogglePinned={() => setTemp(t => ({ ...t, isPinned: !t.isPinned }))}
         priority={temp.priority}
@@ -442,6 +473,8 @@ const NotesListScreen = ({ navigation }: any) => {
           },
         ]}
         extraContent={renderTagInput()}
+        isPublic={temp.isPublic}
+        onTogglePublic={() => setTemp(t => ({ ...t, isPublic: !t.isPublic }))}
         isPinned={temp.isPinned}
         onTogglePinned={() => setTemp(t => ({ ...t, isPinned: !t.isPinned }))}
         priority={temp.priority}
@@ -458,7 +491,6 @@ const NotesListScreen = ({ navigation }: any) => {
         onCancel={closeModal}
       />
 
-      {/* Add Category Modal */}
       <ModalCard
         visible={modal.type === 'category'}
         type="add"
@@ -476,22 +508,20 @@ const NotesListScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5', // Default background, will be overridden by ThemeContext
-    padding: 20, // Default padding, will be overridden by ThemeContext
+    padding: 20,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333', // Default color, will be overridden by ThemeContext
     marginBottom: 16,
   },
   input: {
-    backgroundColor: '#fff', // Default background, will be overridden by ThemeContext
-    borderRadius: 8, // Default radius, will be overridden by ThemeContext
+    backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 14,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0', // Default border, will be overridden by ThemeContext
+    borderColor: '#e0e0e0',
     marginBottom: 12,
   },
   filtersContainer: {
@@ -502,25 +532,22 @@ const styles = StyleSheet.create({
   },
   filterHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   filterLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#555', // Default color, will be overridden by ThemeContext
   },
   addCategoryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0f7fa', // Default background, will be overridden by ThemeContext
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   addCategoryText: {
-    color: '#007bff', // Default color, will be overridden by ThemeContext
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
@@ -529,17 +556,16 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   filterBtn: {
-    backgroundColor: '#e0f7fa', // Default background, will be overridden by ThemeContext
+    backgroundColor: '#e0f7fa',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 8,
   },
   filterBtnActive: {
-    backgroundColor: '#007bff', // Default background, will be overridden by ThemeContext
+    backgroundColor: '#007bff',
   },
   filterText: {
-    color: '#007bff', // Default color, will be overridden by ThemeContext
     fontSize: 14,
     fontWeight: '500',
   },
@@ -549,17 +575,16 @@ const styles = StyleSheet.create({
   pinnedFilter: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0f7fa', // Default background, will be overridden by ThemeContext
+    backgroundColor: '#e0f7fa',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     alignSelf: 'flex-start',
   },
   pinnedFilterActive: {
-    backgroundColor: '#007bff', // Default background, will be overridden by ThemeContext
+    backgroundColor: '#007bff',
   },
   pinnedFilterText: {
-    color: '#007bff', // Default color, will be overridden by ThemeContext
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
@@ -568,7 +593,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   createFirstBtn: {
-    backgroundColor: '#007bff', // Default background, will be overridden by ThemeContext
+    backgroundColor: '#007bff',
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -576,14 +601,13 @@ const styles = StyleSheet.create({
   },
   createFirstText: {
     color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
-    fontWeight: '600',
   },
   fab: {
     position: 'absolute',
     right: 24,
     bottom: 32,
-    backgroundColor: '#007bff', // Default background, will be overridden by ThemeContext
     borderRadius: 999,
     width: 56,
     height: 56,
