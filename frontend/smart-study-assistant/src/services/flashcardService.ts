@@ -54,6 +54,39 @@ export const getFlashcardsByDeck = async (deckId: string): Promise<Flashcard[]> 
   }
 };
 
+// Get flashcards by note ID (alias for getFlashcardsByDeck)
+export const getFlashcardsByNote = async (noteId: string): Promise<Flashcard[]> => {
+  try {
+    const response = await api.get(`/notes/${noteId}/flashcards`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching flashcards by note:", error);
+    throw error;
+  }
+};
+
+// Get flashcards by difficulty
+export const getFlashcardsByDifficulty = async (difficulty: string): Promise<Flashcard[]> => {
+  try {
+    const response = await api.get(`/flashcards/difficulty/${difficulty}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching flashcards by difficulty:", error);
+    throw error;
+  }
+};
+
+// Generate flashcards from note
+export const generateFlashcardsFromNote = async (noteId: string): Promise<Flashcard[]> => {
+  try {
+    const response = await api.post(`/notes/${noteId}/generate-flashcards`);
+    return response.data;
+  } catch (error) {
+    console.error("Error generating flashcards from note:", error);
+    throw error;
+  }
+};
+
 // Get public flashcards by deck ID (for viewing public decks)
 export const getPublicFlashcardsByDeck = async (deckId: string): Promise<Flashcard[]> => {
   try {

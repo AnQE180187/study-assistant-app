@@ -55,15 +55,18 @@ export const fetchFlashcardsByNote = createAsyncThunk(
 
 export const createFlashcardAsync = createAsyncThunk(
   "flashcards/create",
-  async (data: CreateFlashcardData) => {
-    const flashcard = await createFlashcard(data);
+  async (data: { deckId: string; term: string; definition: string }) => {
+    const flashcard = await createFlashcard(data.deckId, {
+      term: data.term,
+      definition: data.definition,
+    });
     return flashcard;
   }
 );
 
 export const updateFlashcardAsync = createAsyncThunk(
   "flashcards/update",
-  async ({ id, data }: { id: string; data: Partial<CreateFlashcardData> }) => {
+  async ({ id, data }: { id: string; data: { term: string; definition: string } }) => {
     const flashcard = await updateFlashcard(id, data);
     return flashcard;
   }
@@ -185,9 +188,9 @@ const flashcardSlice = createSlice({
         state.currentFlashcards.push(action.payload);
 
         // Update decks
-        const noteId = action.payload.noteId;
+        const deckId = action.payload.deckId;
         const deckIndex = state.decks.findIndex(
-          (deck) => deck.noteId === noteId
+          (deck) => deck.deckId === deckId
         );
         if (deckIndex !== -1) {
           state.decks[deckIndex].flashcards.push(action.payload);
@@ -218,7 +221,7 @@ const flashcardSlice = createSlice({
 
         // Update in decks
         const deckIndex = state.decks.findIndex(
-          (deck) => deck.noteId === flashcard.noteId
+          (deck) => deck.deckId === flashcard.deckId
         );
         if (deckIndex !== -1) {
           const cardIndex = state.decks[deckIndex].flashcards.findIndex(

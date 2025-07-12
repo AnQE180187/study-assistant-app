@@ -33,8 +33,8 @@ const CreateEditFlashcardScreen: React.FC = () => {
 
   const isEditing = !!flashcard;
 
-  const [question, setQuestion] = useState(flashcard?.question || "");
-  const [answer, setAnswer] = useState(flashcard?.answer || "");
+  const [question, setQuestion] = useState(flashcard?.term || "");
+  const [answer, setAnswer] = useState(flashcard?.definition || "");
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -51,8 +51,8 @@ const CreateEditFlashcardScreen: React.FC = () => {
     try {
       if (isEditing) {
         await updateFlashcard(flashcard.id, {
-          question: question.trim(),
-          answer: answer.trim(),
+          term: question.trim(),
+          definition: answer.trim(),
         });
         Alert.alert("Thành công", "Đã cập nhật flashcard");
         onUpdate?.();
@@ -61,10 +61,9 @@ const CreateEditFlashcardScreen: React.FC = () => {
           Alert.alert("Lỗi", "Không tìm thấy ID ghi chú");
           return;
         }
-        await createFlashcard({
-          question: question.trim(),
-          answer: answer.trim(),
-          noteId,
+        await createFlashcard(noteId, {
+          term: question.trim(),
+          definition: answer.trim(),
         });
         Alert.alert("Thành công", "Đã tạo flashcard mới");
         onCreated?.();

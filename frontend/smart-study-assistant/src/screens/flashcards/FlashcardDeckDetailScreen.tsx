@@ -102,9 +102,7 @@ const FlashcardDeckDetailScreen: React.FC = () => {
           onPress: async () => {
             try {
               setLoading(true);
-              // Mock note content - in real app, get from note service
-              const mockNoteContent = "Nội dung ghi chú để tạo flashcard...";
-              await generateFlashcardsFromNote(noteId, mockNoteContent);
+              await generateFlashcardsFromNote(noteId);
               await loadFlashcards();
               Alert.alert("Thành công", "Đã tạo flashcard mới từ AI");
             } catch (error) {
@@ -143,8 +141,8 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
   const renderFlashcard = ({ item }: { item: Flashcard }) => (
     <FlashcardItem
-      question={item.question}
-      answer={item.answer}
+      question={item.term}
+      answer={item.definition}
       showActions={true}
       onEdit={() => handleEdit(item)}
       onDelete={() => handleDelete(item)}

@@ -76,8 +76,8 @@ const FlashcardSearchScreen: React.FC = () => {
   const handleCardPress = (flashcard: Flashcard) => {
     // Navigate to practice mode with single card or deck
     (navigation as any).navigate("FlashcardPractice", {
-      noteId: flashcard.noteId,
-      title: flashcard.note?.title || "Flashcard",
+      noteId: flashcard.deckId,
+      title: "Flashcard",
       flashcards: [flashcard],
     });
   };
@@ -85,10 +85,10 @@ const FlashcardSearchScreen: React.FC = () => {
   const renderFlashcard = ({ item }: { item: Flashcard }) => (
     <TouchableOpacity onPress={() => handleCardPress(item)} activeOpacity={0.7}>
       <View style={styles.searchResultItem}>
-        <FlashcardItem question={item.question} answer={item.answer} />
+        <FlashcardItem question={item.term} answer={item.definition} />
         <View style={styles.cardMeta}>
-          <Text style={styles.noteTitle}>{item.note?.title}</Text>
-          <Text style={styles.category}>{item.note?.category}</Text>
+          <Text style={styles.noteTitle}>Flashcard</Text>
+          <Text style={styles.category}>General</Text>
         </View>
       </View>
     </TouchableOpacity>
