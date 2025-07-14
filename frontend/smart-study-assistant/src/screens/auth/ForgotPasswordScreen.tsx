@@ -47,20 +47,20 @@ const ForgotPasswordScreen: React.FC = () => {
       <Text style={styles.title}>Quên mật khẩu</Text>
       {step === 'email' && (
         <>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <HelperText type="info" visible={true}>
-            Nhập email để nhận hướng dẫn đặt lại mật khẩu.
-          </HelperText>
+      <TextInput
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <HelperText type="info" visible={true}>
+        Nhập email để nhận hướng dẫn đặt lại mật khẩu.
+      </HelperText>
           <Button mode="contained" onPress={handleSubmit} style={styles.button} contentStyle={styles.buttonContent} labelStyle={styles.buttonLabel} loading={loading} disabled={loading}>
-            Gửi
-          </Button>
+        Gửi
+      </Button>
         </>
       )}
       {step === 'otp' && (

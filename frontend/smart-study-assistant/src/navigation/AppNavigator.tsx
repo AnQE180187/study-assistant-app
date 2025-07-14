@@ -59,7 +59,7 @@ const AppNavigator = () => {
       <Tab.Screen name="Notes" component={NotesListScreen} options={{ tabBarLabel: t('navigation.notes') }} />
       <Tab.Screen name="Flashcards" component={FlashcardDecksScreen} options={{ tabBarLabel: t('navigation.flashcards') }} />
       <Tab.Screen name="Planner" component={StudyPlanScreen} options={{ tabBarLabel: t('navigation.planner') }} />
-      <Tab.Screen name="AI Chat" component={AIChatScreen} options={{ tabBarLabel: t('navigation.aiChat') }} />
+      <Tab.Screen name="AI Chat" component={AIChatScreen} options={{ tabBarLabel: t('flashcards.ai_title'), tabBarIcon: ({ color, size }) => <Ionicons name="bulb" size={size} color={color} /> }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: t('navigation.profile') }} />
     </Tab.Navigator>
   );

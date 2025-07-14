@@ -31,7 +31,7 @@ export const resetPassword = async (email: string, token: string, newPassword: s
 export const getProfile = async (token: string): Promise<{ id: string; name: string; email: string; role: string; createdAt: string }> => {
   const res = await api.get('/users/profile', { headers: { Authorization: `Bearer ${token}` } });
   return res.data;
-};
+}; 
 
 export const sendOtp = async (email: string) => {
   return api.post('/users/send-otp', { email });

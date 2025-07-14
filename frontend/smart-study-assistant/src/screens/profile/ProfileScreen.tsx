@@ -145,7 +145,7 @@ const ProfileScreen: React.FC = () => {
             <Text style={[styles.profileEmail, { color: currentTheme.colors.textSecondary }]}>
               {profile?.email}
             </Text>
-          </View>
+        </View>
         </Card.Content>
       </Card>
 
@@ -220,7 +220,7 @@ const ProfileScreen: React.FC = () => {
               >
                 {t('profile.other')}
               </Button>
-            </View>
+        </View>
           )}
 
           <Button
@@ -296,7 +296,7 @@ const ProfileScreen: React.FC = () => {
                 >
                   {t('profile.changePassword')}
                 </Button>
-              </View>
+      </View>
             </>
           )}
         </Card.Content>
@@ -328,7 +328,7 @@ const ProfileScreen: React.FC = () => {
                 >
                   {t('profile.en')}
                 </Button>
-              </View>
+    </View>
             )}
           />
 
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     marginBottom: 16,
-    elevation: 2,
+      elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,

@@ -108,7 +108,17 @@
     "exitWarning": "Tiến độ của bạn sẽ không được lưu lại",
     "exit": "Thoát",
     "pressToShowDefinition": "Nhấn để xem định nghĩa",
-    "pressToShowTerm": "Nhấn để xem thuật ngữ"
+    "pressToShowTerm": "Nhấn để xem thuật ngữ",
+    "ai_title": "Tạo flashcard bằng AI",
+    "ai_generate": "Sinh flashcard",
+    "ai_placeholder": "Nhập chủ đề hoặc từ khóa (ví dụ: IELTS Reading, Ngữ pháp tiếng Anh lớp 12)",
+    "select_deck": "Chọn bộ thẻ",
+    "ai_input_required": "Vui lòng nhập từ khóa và chọn bộ thẻ.",
+    "ai_generate_success": "Đã sinh thành công {{count}} flashcard!",
+    "ai_error": "Lỗi khi sinh flashcard",
+    "flashcard": "Flashcard",
+    "term": "Thuật ngữ",
+    "definition": "Định nghĩa"
   },
   "profile": {
     "title": "Hồ sơ",

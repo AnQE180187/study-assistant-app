@@ -12,7 +12,8 @@ const {
   bulkDeleteFlashcards,
   bulkUpdateFlashcards,
   exportFlashcards,
-  importFlashcards
+  importFlashcards,
+  generateAndSaveFlashcards
 } = require('../controllers/flashcardController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -44,5 +45,8 @@ router.put('/flashcards/bulk', bulkUpdateFlashcards);
 // Export/Import
 router.get('/flashcards/export', exportFlashcards);
 router.post('/flashcards/import', importFlashcards);
+
+// Route AI Gemini flashcard generation
+router.post('/ai/generate-flashcards', protect, generateAndSaveFlashcards);
 
 module.exports = router; 

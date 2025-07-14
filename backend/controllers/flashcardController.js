@@ -1,4 +1,5 @@
 const prisma = require('../config/prismaClient');
+const { generateFlashcardsFromGemini, sendFlashcardsToInternalAPI } = require('../services/geminiAgent');
 
 // @desc    Create a new flashcard in a deck
 // @route   POST /api/decks/:deckId/flashcards
@@ -432,6 +433,44 @@ const getPublicFlashcardsByDeck = async (req, res) => {
   }
 };
 
+/**
+ * @desc   Sinh flashcard từ Gemini AI và lưu vào deck
+ * @route  POST /api/ai/generate-flashcards
+ * @access Private
+ * @body   { keyword: string, deckId: string }
+ */
+async function generateAndSaveFlashcards(req, res) {
+  try {
+    const { keyword, deckId, count, language } = req.body;
+    const userId = req.user.id;
+    if (!keyword || !deckId) return res.status(400).json({ message: 'keyword và deckId là bắt buộc' });
+    // Kiểm tra quyền sở hữu deck
+    const deck = await prisma.deck.findUnique({ where: { id: deckId }, select: { userId: true } });
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+    if (deck.userId !== userId) return res.status(401).json({ message: 'Not authorized' });
+    // Gọi Gemini
+    let flashcards;
+    try {
+      flashcards = await generateFlashcardsFromGemini(keyword, count, language);
+    } catch (geminiErr) {
+      console.error('Gemini error:', geminiErr);
+      return res.status(500).json({ message: geminiErr.message || 'Gemini AI error' });
+    }
+    // Gửi từng flashcard vào API nội bộ
+    let results;
+    try {
+      results = await sendFlashcardsToInternalAPI(flashcards, deckId, req.headers.authorization?.replace('Bearer ', ''));
+    } catch (apiErr) {
+      console.error('Internal API error:', apiErr);
+      return res.status(500).json({ message: 'Internal API error: ' + (apiErr.message || apiErr) });
+    }
+    res.json({ count: results.length, results });
+  } catch (err) {
+    console.error('generateAndSaveFlashcards error:', err);
+    res.status(500).json({ message: err.message || 'Unknown error' });
+  }
+}
+
 module.exports = {
   createFlashcard,
   getFlashcardsByDeck,
@@ -448,4 +487,5 @@ module.exports = {
   getPublicFlashcards,
   searchPublicFlashcards,
   getPublicFlashcardsByDeck,
+  generateAndSaveFlashcards,
 }; 

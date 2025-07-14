@@ -108,7 +108,17 @@
     "exitWarning": "Your progress will not be saved",
     "exit": "Exit",
     "pressToShowDefinition": "Tap to show definition",
-    "pressToShowTerm": "Tap to show term"
+    "pressToShowTerm": "Tap to show term",
+    "ai_title": "AI Flashcard Generator",
+    "ai_generate": "Generate Flashcards",
+    "ai_placeholder": "Enter a topic or keyword (e.g. IELTS Reading, English Grammar 12)",
+    "select_deck": "Select Deck",
+    "ai_input_required": "Please enter a keyword and select a deck.",
+    "ai_generate_success": "Successfully generated {{count}} flashcards!",
+    "ai_error": "Error generating flashcards",
+    "flashcard": "Flashcard",
+    "term": "Term",
+    "definition": "Definition"
   },
   "profile": {
     "title": "Profile",

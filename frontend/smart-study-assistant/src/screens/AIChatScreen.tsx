@@ -1,117 +1,138 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Picker } from '@react-native-picker/picker';
+import { useFocusEffect } from '@react-navigation/native';
 
-interface Message {
+interface Deck {
   id: string;
-  text: string;
-  sender: 'user' | 'ai';
+  title: string;
+}
+
+interface FlashcardResult {
+  success: boolean;
+  data?: { term: string; definition: string };
+  error?: any;
 }
 
 const AIChatScreen: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const { t } = useTranslation();
+  const { currentTheme } = useTheme();
+  const { token } = useAuth();
+  const [keyword, setKeyword] = useState('');
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [selectedDeck, setSelectedDeck] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const flatListRef = useRef<FlatList>(null);
+  const [results, setResults] = useState<FlashcardResult[]>([]);
+  // Xóa state flashcardCount
+  const [language, setLanguage] = useState('vi'); // mặc định tiếng Việt
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now() + '', text: input, sender: 'user' };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
+  // Thay useEffect bằng useFocusEffect để reload deck khi màn hình được focus
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      api.get('/decks')
+        .then(res => { if (isActive) setDecks(res.data); })
+        .catch(() => { if (isActive) setDecks([]); });
+      return () => { isActive = false; };
+    }, [])
+  );
+
+  const handleGenerate = async () => {
+    if (!keyword.trim() || !selectedDeck) {
+      Alert.alert(t('error'), t('flashcards.ai_input_required'));
+      return;
+    }
     setLoading(true);
+    setResults([]);
     try {
-      const res = await api.post('/ai/chat', { message: userMsg.text });
-      const aiMsg: Message = { id: Date.now() + Math.random() + '', text: res.data.reply, sender: 'ai' };
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch (e) {
-      setMessages((prev) => [...prev, { id: Date.now() + Math.random() + '', text: 'Lỗi kết nối AI.', sender: 'ai' }]);
+      const res = await api.post('/ai/generate-flashcards', { keyword, deckId: selectedDeck, count: 10, language });
+      setResults(res.data.results);
+      Alert.alert(t('success'), t('flashcards.ai_generate_success', { count: res.data.count }));
+    } catch (e: any) {
+      console.log('AI error:', e);
+      let msg = e.response?.data?.message || e.message || t('flashcards.ai_unknown_error');
+      if (msg.includes('Gemini')) {
+        msg = t('flashcards.ai_gemini_error') + ': ' + msg;
+      }
+      Alert.alert(t('error'), msg);
     } finally {
       setLoading(false);
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     }
   };
 
-  const renderItem = ({ item }: { item: Message }) => (
-    <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.aiBubble]}>
-      <Text style={styles.bubbleText}>{item.text}</Text>
-    </View>
-  );
-
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.chatContainer}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-      />
-      <View style={styles.inputContainer}>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: currentTheme.colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.inner}>
+        <Text style={[styles.title, { color: currentTheme.colors.text }]}>{t('flashcards.ai_title')}</Text>
         <TextInput
-          style={styles.input}
-          placeholder="Nhập câu hỏi cho AI..."
-          value={input}
-          onChangeText={setInput}
+          style={[styles.input, { backgroundColor: currentTheme.colors.surface, color: currentTheme.colors.text }]}
+          placeholder={t('flashcards.ai_placeholder')}
+          placeholderTextColor={currentTheme.colors.textSecondary}
+          value={keyword}
+          onChangeText={setKeyword}
           editable={!loading}
-          onSubmitEditing={sendMessage}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage} disabled={loading}>
-          <Ionicons name="send" size={24} color="#fff" />
+        <Picker
+          selectedValue={selectedDeck}
+          onValueChange={setSelectedDeck}
+          enabled={!loading}
+          style={{ color: currentTheme.colors.text, backgroundColor: currentTheme.colors.surface, marginVertical: 8 }}
+        >
+          <Picker.Item label={t('flashcards.select_deck')} value="" />
+          {decks.map(deck => (
+            <Picker.Item key={deck.id} label={deck.title} value={deck.id} />
+          ))}
+        </Picker>
+        <Picker
+          selectedValue={language}
+          onValueChange={setLanguage}
+          enabled={!loading}
+          style={{ color: currentTheme.colors.text, backgroundColor: currentTheme.colors.surface, marginVertical: 8 }}
+        >
+          <Picker.Item label="Tiếng Việt" value="vi" />
+          <Picker.Item label="English" value="en" />
+          <Picker.Item label="日本語" value="ja" />
+        </Picker>
+        {/* Xóa TextInput chọn số lượng flashcards khỏi UI */}
+        <TouchableOpacity style={[styles.button, { backgroundColor: currentTheme.colors.primary }]} onPress={handleGenerate} disabled={loading || !keyword.trim() || !selectedDeck}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('flashcards.ai_generate')}</Text>}
         </TouchableOpacity>
+        <FlatList
+          data={results}
+          keyExtractor={(_, idx) => idx + ''}
+          renderItem={({ item, index }) => (
+            <View style={[styles.resultItem, { backgroundColor: item.success ? currentTheme.colors.success : currentTheme.colors.error }]}> 
+              <Text style={{ color: currentTheme.colors.text, fontWeight: 'bold' }}>{t('flashcards.flashcard')} #{index + 1}</Text>
+              {item.success ? (
+                <>
+                  <Text style={{ color: currentTheme.colors.text }}>{t('flashcards.term')}: {item.data?.term}</Text>
+                  <Text style={{ color: currentTheme.colors.text }}>{t('flashcards.definition')}: {item.data?.definition}</Text>
+                </>
+              ) : (
+                <Text style={{ color: currentTheme.colors.text }}>{t('flashcards.ai_error')}: {item.error}</Text>
+              )}
+            </View>
+          )}
+          style={{ marginTop: 16 }}
+        />
       </View>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F6FA' },
-  chatContainer: { padding: 16, paddingBottom: 80 },
-  bubble: {
-    maxWidth: '80%',
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 10,
-  },
-  userBubble: {
-    backgroundColor: '#4F8EF7',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  aiBubble: {
-    backgroundColor: '#E5E5EA',
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-  },
-  bubbleText: { color: '#222', fontSize: 16 },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginRight: 8,
-  },
-  sendButton: {
-    backgroundColor: '#4F8EF7',
-    borderRadius: 20,
-    padding: 10,
-  },
+  container: { flex: 1 },
+  inner: { flex: 1, padding: 20 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16 },
+  input: { borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 8 },
+  button: { borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 8 },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  resultItem: { borderRadius: 8, padding: 12, marginBottom: 10 },
 });
 
 export default AIChatScreen; 

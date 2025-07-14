@@ -84,7 +84,7 @@ const RegisterScreen: React.FC = () => {
           />
           <Button mode="contained" onPress={handleVerify} style={styles.button} contentStyle={styles.buttonContent} labelStyle={styles.buttonLabel} loading={loading} disabled={loading}>
             Xác thực & Đăng ký
-          </Button>
+      </Button>
         </>
       )}
       <Divider style={{ marginVertical: 16 }} />

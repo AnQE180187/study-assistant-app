@@ -12,15 +12,15 @@ import './src/services/i18n'; // Import i18n to initialize translations
 export default function App() {
   return (
     <ReduxProvider store={store}>
-      <AuthProvider>
+    <AuthProvider>
         <ThemeProvider>
           <LanguageProvider>
             <PaperProvider>
-              <RootNavigator />
+      <RootNavigator />
             </PaperProvider>
           </LanguageProvider>
         </ThemeProvider>
-      </AuthProvider>
+    </AuthProvider>
     </ReduxProvider>
   );
 }
