@@ -19,6 +19,7 @@ import {
   deleteFlashcard,
   generateFlashcardsFromNote,
 } from "../../services/flashcardService";
+import { useTranslation } from 'react-i18next';
 
 type FlashcardStackParamList = {
   FlashcardDeckDetail: { noteId: string; title: string };
@@ -39,6 +40,7 @@ interface RouteParams {
 }
 
 const FlashcardDeckDetailScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<RouteProp1>();
   const navigation = useNavigation<NavigationProp>();
   const { noteId, title } = route.params;
@@ -93,20 +95,20 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
   const handleGenerateFromAI = () => {
     Alert.alert(
-      "Tạo flashcard tự động",
-      "Sử dụng AI để tạo flashcard từ nội dung ghi chú?",
+      t('flashcards.ai_title'),
+      t('flashcards.ai_confirm'),
       [
-        { text: "Hủy", style: "cancel" },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: "Tạo",
+          text: t('common.confirm'),
           onPress: async () => {
             try {
               setLoading(true);
               await generateFlashcardsFromNote(noteId);
               await loadFlashcards();
-              Alert.alert("Thành công", "Đã tạo flashcard mới từ AI");
+              Alert.alert(t('flashcards.success'), t('flashcards.ai_generate_success'));
             } catch (error) {
-              Alert.alert("Lỗi", "Không thể tạo flashcard từ AI");
+              Alert.alert(t('flashcards.error'), t('flashcards.ai_error'));
             } finally {
               setLoading(false);
             }
@@ -124,7 +126,7 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
   const handlePractice = () => {
     if (flashcards.length === 0) {
-      Alert.alert("Thông báo", "Chưa có flashcard nào để luyện tập");
+      Alert.alert(t('common.info'), t('flashcards.noFlashcards'));
       return;
     }
     navigation.navigate("FlashcardPractice", {
@@ -151,22 +153,20 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>Chưa có flashcard nào</Text>
-      <Text style={styles.emptySubtitle}>
-        Tạo flashcard để bắt đầu học tập hiệu quả
-      </Text>
+      <Text style={styles.emptyTitle}>{t('flashcards.noFlashcards')}</Text>
+      <Text style={styles.emptySubtitle}>{t('flashcards.emptySubtitle')}</Text>
       <View style={styles.emptyActions}>
         <TouchableOpacity
           style={styles.createButton}
           onPress={handleCreateManual}
         >
-          <Text style={styles.createButtonText}>Tạo thủ công</Text>
+          <Text style={styles.createButtonText}>{t('flashcards.createManual')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.aiButton}
           onPress={handleGenerateFromAI}
         >
-          <Text style={styles.aiButtonText}>Tạo bằng AI</Text>
+          <Text style={styles.aiButtonText}>{t('flashcards.createAI')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -177,14 +177,14 @@ const FlashcardDeckDetailScreen: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Quay lại</Text>
+            <Text style={styles.backButton}>← {t('common.back')}</Text>
           </TouchableOpacity>
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
         </View>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Đang tải...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </View>
     );
@@ -202,7 +202,7 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
       <View style={styles.mainOptions}>
         <TouchableOpacity style={styles.optionButton} onPress={handlePractice}>
-          <Text style={styles.optionButtonText}>Study Mode</Text>
+          <Text style={styles.optionButtonText}>{t('flashcards.studyMode')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.optionButton}
@@ -213,12 +213,12 @@ const FlashcardDeckDetailScreen: React.FC = () => {
             });
           }}
         >
-          <Text style={styles.optionButtonText}>FlashCards</Text>
+          <Text style={styles.optionButtonText}>{t('flashcards.manageFlashcards')}</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.editButton} onPress={handleCreateManual}>
-        <Text style={styles.editButtonText}>EDIT</Text>
+        <Text style={styles.editButtonText}>{t('common.edit')}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -17,6 +17,7 @@ import {
   updateFlashcard,
   Flashcard,
 } from "../../services/flashcardService";
+import { useTranslation } from 'react-i18next';
 
 interface RouteParams {
   noteId?: string;
@@ -26,6 +27,7 @@ interface RouteParams {
 }
 
 const CreateEditFlashcardScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const { noteId, flashcard, onCreated, onUpdate } =
@@ -39,11 +41,11 @@ const CreateEditFlashcardScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!question.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập câu hỏi");
+      Alert.alert(t('flashcards.error'), t('flashcards.enterQuestion'));
       return;
     }
     if (!answer.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập đáp án");
+      Alert.alert(t('flashcards.error'), t('flashcards.enterAnswer'));
       return;
     }
 
@@ -54,25 +56,25 @@ const CreateEditFlashcardScreen: React.FC = () => {
           term: question.trim(),
           definition: answer.trim(),
         });
-        Alert.alert("Thành công", "Đã cập nhật flashcard");
+        Alert.alert(t('flashcards.success'), t('flashcards.editSuccess'));
         onUpdate?.();
       } else {
         if (!noteId) {
-          Alert.alert("Lỗi", "Không tìm thấy ID ghi chú");
+          Alert.alert(t('flashcards.error'), t('flashcards.noteIdNotFound'));
           return;
         }
         await createFlashcard(noteId, {
           term: question.trim(),
           definition: answer.trim(),
         });
-        Alert.alert("Thành công", "Đã tạo flashcard mới");
+        Alert.alert(t('flashcards.success'), t('flashcards.addSuccess'));
         onCreated?.();
       }
       navigation.goBack();
     } catch (error) {
       Alert.alert(
-        "Lỗi",
-        isEditing ? "Không thể cập nhật flashcard" : "Không thể tạo flashcard"
+        t('flashcards.error'),
+        isEditing ? t('flashcards.editError') : t('flashcards.addError')
       );
       console.error("Error saving flashcard:", error);
     } finally {
@@ -82,9 +84,9 @@ const CreateEditFlashcardScreen: React.FC = () => {
 
   const handleCancel = () => {
     if (question.trim() || answer.trim()) {
-      Alert.alert("Hủy thay đổi?", "Các thay đổi sẽ không được lưu lại", [
-        { text: "Tiếp tục chỉnh sửa", style: "cancel" },
-        { text: "Hủy", onPress: () => navigation.goBack() },
+      Alert.alert(t('common.cancel'), t('flashcards.cancelConfirm'), [
+        { text: t('flashcards.continueEditing'), style: "cancel" },
+        { text: t('common.cancel'), onPress: () => navigation.goBack() },
       ]);
     } else {
       navigation.goBack();
@@ -98,10 +100,10 @@ const CreateEditFlashcardScreen: React.FC = () => {
     >
       <View style={styles.header}>
         <TouchableOpacity onPress={handleCancel}>
-          <Text style={styles.cancelButton}>Hủy</Text>
+          <Text style={styles.cancelButton}>{t('common.cancel')}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>
-          {isEditing ? "Sửa Flashcard" : "Tạo Flashcard"}
+          {isEditing ? t('flashcards.editFlashcard') : t('flashcards.addFlashcard')}
         </Text>
         <TouchableOpacity
           onPress={handleSave}
@@ -114,20 +116,20 @@ const CreateEditFlashcardScreen: React.FC = () => {
               loading && styles.saveButtonTextDisabled,
             ]}
           >
-            {loading ? "Đang lưu..." : "Lưu"}
+            {loading ? t('common.loading') : t('common.save')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Câu hỏi</Text>
+          <Text style={styles.sectionTitle}>{t('flashcards.question')}</Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
               value={question}
               onChangeText={setQuestion}
-              placeholder="Nhập câu hỏi..."
+              placeholder={t('flashcards.questionPlaceholder')}
               placeholderTextColor="#999"
               multiline
               textAlignVertical="top"
@@ -138,13 +140,13 @@ const CreateEditFlashcardScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Đáp án</Text>
+          <Text style={styles.sectionTitle}>{t('flashcards.answer')}</Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
               value={answer}
               onChangeText={setAnswer}
-              placeholder="Nhập đáp án..."
+              placeholder={t('flashcards.answerPlaceholder')}
               placeholderTextColor="#999"
               multiline
               textAlignVertical="top"
@@ -157,14 +159,14 @@ const CreateEditFlashcardScreen: React.FC = () => {
         {/* Preview */}
         {question.trim() && answer.trim() && (
           <View style={styles.previewSection}>
-            <Text style={styles.previewTitle}>Xem trước</Text>
+            <Text style={styles.previewTitle}>{t('flashcards.preview')}</Text>
             <View style={styles.previewCard}>
               <View style={styles.previewFront}>
-                <Text style={styles.previewLabel}>Câu hỏi</Text>
+                <Text style={styles.previewLabel}>{t('flashcards.question')}</Text>
                 <Text style={styles.previewQuestion}>{question}</Text>
               </View>
               <View style={styles.previewBack}>
-                <Text style={styles.previewLabel}>Đáp án</Text>
+                <Text style={styles.previewLabel}>{t('flashcards.answer')}</Text>
                 <Text style={styles.previewAnswer}>{answer}</Text>
               </View>
             </View>

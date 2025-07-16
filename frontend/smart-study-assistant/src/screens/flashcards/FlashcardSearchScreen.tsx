@@ -16,9 +16,11 @@ import {
   searchFlashcards,
   getFlashcardsByDifficulty,
 } from "../../services/flashcardService";
+import { useTranslation } from 'react-i18next';
 
 const FlashcardSearchScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,10 +102,8 @@ const FlashcardSearchScreen: React.FC = () => {
     if (!searchQuery.trim() && selectedFilter === "all") {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>🔍 Tìm kiếm Flashcard</Text>
-          <Text style={styles.emptySubtitle}>
-            Nhập từ khóa để tìm kiếm hoặc chọn bộ lọc độ khó
-          </Text>
+          <Text style={styles.emptyTitle}>🔍 {t('flashcards.searchTitle')}</Text>
+          <Text style={styles.emptySubtitle}>{t('flashcards.searchSubtitle')}</Text>
         </View>
       );
     }
@@ -111,10 +111,8 @@ const FlashcardSearchScreen: React.FC = () => {
     if (searchResults.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
-          <Text style={styles.emptySubtitle}>
-            Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc
-          </Text>
+          <Text style={styles.emptyTitle}>{t('flashcards.noResults')}</Text>
+          <Text style={styles.emptySubtitle}>{t('flashcards.noResultsSubtitle')}</Text>
         </View>
       );
     }
@@ -127,9 +125,9 @@ const FlashcardSearchScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Quay lại</Text>
+          <Text style={styles.backButton}>← {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Tìm kiếm</Text>
+        <Text style={styles.title}>{t('flashcards.search')}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -137,7 +135,7 @@ const FlashcardSearchScreen: React.FC = () => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Tìm kiếm flashcard..."
+          placeholder={t('flashcards.searchPlaceholder')}
           placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -147,13 +145,13 @@ const FlashcardSearchScreen: React.FC = () => {
 
       {/* Filter Buttons */}
       <View style={styles.filtersContainer}>
-        <Text style={styles.filterLabel}>Độ khó:</Text>
+        <Text style={styles.filterLabel}>{t('flashcards.difficulty')}</Text>
         <View style={styles.filterButtons}>
           {[
-            { key: "all", label: "Tất cả" },
-            { key: "easy", label: "Dễ" },
-            { key: "medium", label: "TB" },
-            { key: "hard", label: "Khó" },
+            { key: "all", label: t('flashcards.all') },
+            { key: "easy", label: t('flashcards.easy') },
+            { key: "medium", label: t('flashcards.medium') },
+            { key: "hard", label: t('flashcards.hard') },
           ].map((filter) => (
             <TouchableOpacity
               key={filter.key}

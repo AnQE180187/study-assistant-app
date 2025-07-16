@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import ModalCard from '../../components/ModalCard';
 import { getFlashcardsByDeck, createFlashcard, updateFlashcard, deleteFlashcard, Flashcard } from '../../services/flashcardService';
 import { COLORS } from '../../constants/themes';
+import { useTranslation } from 'react-i18next';
 
 type FlashcardStackParamList = {
   FlashcardManagement: { deckId: string; title: string };
@@ -23,6 +24,7 @@ type NavigationProp = StackNavigationProp<FlashcardStackParamList, "FlashcardMan
 type RouteProps = RouteProp<FlashcardStackParamList, "FlashcardManagement">;
 
 const FlashcardManagementScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<RouteProps>();
   const navigation = useNavigation<NavigationProp>();
   const { deckId, title } = route.params;
@@ -44,7 +46,7 @@ const FlashcardManagementScreen: React.FC = () => {
       const data = await getFlashcardsByDeck(deckId);
       setFlashcards(data);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tải danh sách flashcard');
+      Alert.alert(t('flashcards.error'), error.message || t('flashcards.loadError'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +65,7 @@ const FlashcardManagementScreen: React.FC = () => {
 
   const handleAdd = async () => {
     if (!temp.term.trim() || !temp.definition.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thuật ngữ và định nghĩa');
+      Alert.alert(t('flashcards.error'), t('flashcards.enterTermAndDefinition'));
       return;
     }
     
@@ -75,9 +77,9 @@ const FlashcardManagementScreen: React.FC = () => {
       });
       await fetchFlashcards();
       closeModal();
-      Alert.alert('Thành công', 'Đã thêm flashcard mới');
+      Alert.alert(t('flashcards.success'), t('flashcards.addSuccess'));
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể thêm flashcard');
+      Alert.alert(t('flashcards.error'), error.message || t('flashcards.addError'));
     } finally {
       setOperationLoading(false);
     }
@@ -85,7 +87,7 @@ const FlashcardManagementScreen: React.FC = () => {
   
   const handleEdit = async () => {
     if (!temp.term.trim() || !temp.definition.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thuật ngữ và định nghĩa');
+      Alert.alert(t('flashcards.error'), t('flashcards.enterTermAndDefinition'));
       return;
     }
     
@@ -98,9 +100,9 @@ const FlashcardManagementScreen: React.FC = () => {
         });
         await fetchFlashcards();
         closeModal();
-        Alert.alert('Thành công', 'Đã cập nhật flashcard');
+        Alert.alert(t('flashcards.success'), t('flashcards.editSuccess'));
       } catch (error: any) {
-        Alert.alert('Lỗi', error.message || 'Không thể cập nhật flashcard');
+        Alert.alert(t('flashcards.error'), error.message || t('flashcards.editError'));
       } finally {
         setOperationLoading(false);
       }
@@ -114,9 +116,9 @@ const FlashcardManagementScreen: React.FC = () => {
         await deleteFlashcard(flashcards[modal.index].id);
         await fetchFlashcards();
         closeModal();
-        Alert.alert('Thành công', 'Đã xóa flashcard');
+        Alert.alert(t('flashcards.success'), t('flashcards.deleteSuccess'));
       } catch (error: any) {
-        Alert.alert('Lỗi', error.message || 'Không thể xóa flashcard');
+        Alert.alert(t('flashcards.error'), error.message || t('flashcards.deleteError'));
       } finally {
         setOperationLoading(false);
       }
@@ -146,7 +148,7 @@ const FlashcardManagementScreen: React.FC = () => {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>Đang tải...</Text>
+        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>{t('flashcards.loading')}</Text>
       </View>
     );
   }
@@ -164,17 +166,17 @@ const FlashcardManagementScreen: React.FC = () => {
       </View>
       
       <TouchableOpacity style={styles.addButton} onPress={openAdd} disabled={operationLoading}>
-        <Text style={styles.addButtonText}>THÊM FLASHCARD</Text>
+        <Text style={styles.addButtonText}>{t('flashcards.addFlashcard')}</Text>
       </TouchableOpacity>
       
       {flashcards.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Ionicons name="document-text-outline" size={64} color={COLORS.textSecondary} />
           <Text style={{ marginTop: 16, color: COLORS.textSecondary, fontSize: 16 }}>
-            Chưa có flashcard nào
+            {t('flashcards.noFlashcards')}
           </Text>
           <TouchableOpacity style={styles.createFirstBtn} onPress={openAdd}>
-            <Text style={styles.createFirstText}>Thêm flashcard đầu tiên</Text>
+            <Text style={styles.createFirstText}>{t('flashcards.addFirstFlashcard')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -193,10 +195,10 @@ const FlashcardManagementScreen: React.FC = () => {
       <ModalCard
         visible={modal.type === 'add'}
         type="add"
-        title="Thêm flashcard"
+        title={t('flashcards.addFlashcard')}
         fields={[
-          { label: 'Thuật ngữ', value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
-          { label: 'Định nghĩa', value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
+          { label: t('flashcards.term'), value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
+          { label: t('flashcards.definition'), value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
         ]}
         onSubmit={handleAdd}
         onCancel={closeModal}
@@ -204,10 +206,10 @@ const FlashcardManagementScreen: React.FC = () => {
       <ModalCard
         visible={modal.type === 'edit'}
         type="edit"
-        title="Sửa flashcard"
+        title={t('flashcards.editFlashcard')}
         fields={[
-          { label: 'Thuật ngữ', value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
-          { label: 'Định nghĩa', value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
+          { label: t('flashcards.term'), value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
+          { label: t('flashcards.definition'), value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
         ]}
         onSubmit={handleEdit}
         onCancel={closeModal}
@@ -215,7 +217,7 @@ const FlashcardManagementScreen: React.FC = () => {
       <ModalCard
         visible={modal.type === 'delete'}
         type="delete"
-        title="Xóa flashcard"
+        title={t('flashcards.deleteFlashcard')}
         onSubmit={handleDelete}
         onCancel={closeModal}
       />
@@ -223,7 +225,7 @@ const FlashcardManagementScreen: React.FC = () => {
       {operationLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={{ marginTop: 8, color: COLORS.textSecondary }}>Đang xử lý...</Text>
+          <Text style={{ marginTop: 8, color: COLORS.textSecondary }}>{t('common.loading')}</Text>
         </View>
       )}
     </View>

@@ -36,7 +36,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
       });
       setSessions(sortedData);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tải lịch học');
+      Alert.alert(t('study_plan.error'), error.message || t('study_plan.loadError'));
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
   // CRUD
   const handleAdd = async () => {
     if (!temp.title.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      Alert.alert(t('study_plan.error'), t('study_plan.titleRequired'));
       return;
     }
 
@@ -94,9 +94,9 @@ const StudyPlanScreen = ({ navigation }: any) => {
       });
       setSessions([newPlan, ...sessions]);
       closeModal();
-      Alert.alert('Thành công', 'Đã thêm lịch học mới');
+      Alert.alert(t('study_plan.success'), t('study_plan.addSuccess'));
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể thêm lịch học');
+      Alert.alert(t('study_plan.error'), error.message || t('study_plan.addError'));
     } finally {
       setOperationLoading(false);
     }
@@ -104,7 +104,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
 
   const handleEdit = async () => {
     if (!temp.title.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      Alert.alert(t('study_plan.error'), t('study_plan.titleRequired'));
       return;
     }
 
@@ -121,9 +121,9 @@ const StudyPlanScreen = ({ navigation }: any) => {
         newSessions[modal.index] = updated;
         setSessions(newSessions);
         closeModal();
-        Alert.alert('Thành công', 'Đã cập nhật lịch học');
+        Alert.alert(t('study_plan.success'), t('study_plan.updateSuccess'));
       } catch (error: any) {
-        Alert.alert('Lỗi', error.message || 'Không thể cập nhật lịch học');
+        Alert.alert(t('study_plan.error'), error.message || t('study_plan.updateError'));
       } finally {
         setOperationLoading(false);
       }
@@ -137,9 +137,9 @@ const StudyPlanScreen = ({ navigation }: any) => {
         await deleteStudyPlan(sessions[modal.index].id);
         setSessions(sessions.filter((_, i) => i !== modal.index));
         closeModal();
-        Alert.alert('Thành công', 'Đã xóa lịch học');
+        Alert.alert(t('study_plan.success'), t('study_plan.deleteSuccess'));
       } catch (error: any) {
-        Alert.alert('Lỗi', error.message || 'Không thể xóa lịch học');
+        Alert.alert(t('study_plan.error'), error.message || t('study_plan.deleteError'));
       } finally {
         setOperationLoading(false);
       }
@@ -154,7 +154,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
       );
       setSessions(newSessions);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể cập nhật trạng thái');
+      Alert.alert(t('study_plan.error'), error.message || t('study_plan.toggleError'));
     }
   };
 

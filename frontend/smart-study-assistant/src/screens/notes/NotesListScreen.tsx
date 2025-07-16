@@ -69,7 +69,7 @@ const NotesListScreen = ({ navigation }: any) => {
       const fetchedNotes = await getNotes(params);
       setNotes(fetchedNotes);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tải danh sách ghi chú');
+      Alert.alert(t('notes.error'), error.message || t('notes.loadError'));
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ const NotesListScreen = ({ navigation }: any) => {
       const fetchedCategories = await getCategories();
       setCategories([t('notes.all'), ...fetchedCategories.filter(cat => cat !== t('notes.all'))]);
     } catch (error: any) {
-      console.error('Error fetching categories:', error);
+      console.error(t('notes.error'), error);
     }
   };
 
@@ -133,7 +133,7 @@ const NotesListScreen = ({ navigation }: any) => {
   // CRUD operations
   const handleAdd = async () => {
     if (!temp.title?.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      Alert.alert(t('notes.error'), t('notes.titleRequired'));
       return;
     }
 
@@ -150,15 +150,15 @@ const NotesListScreen = ({ navigation }: any) => {
       });
       setNotes([newNote, ...notes]);
       closeModal();
-      Alert.alert('Thành công', 'Đã tạo ghi chú mới');
+      Alert.alert(t('notes.success'), t('notes.addSuccess'));
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tạo ghi chú');
+      Alert.alert(t('notes.error'), error.message || t('notes.addError'));
     }
   };
 
   const handleEdit = async () => {
     if (!temp.title?.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      Alert.alert(t('notes.error'), t('notes.titleRequired'));
       return;
     }
 
@@ -181,9 +181,9 @@ const NotesListScreen = ({ navigation }: any) => {
           setNotes(newNotes);
         }
         closeModal();
-        Alert.alert('Thành công', 'Đã cập nhật ghi chú');
+        Alert.alert(t('notes.success'), t('notes.editSuccess'));
       } catch (error: any) {
-        Alert.alert('Lỗi', error.message || 'Không thể cập nhật ghi chú');
+        Alert.alert(t('notes.error'), error.message || t('notes.editError'));
       }
     }
   };
@@ -194,9 +194,9 @@ const NotesListScreen = ({ navigation }: any) => {
         await deleteNote(filteredNotes[modal.index!].id);
         setNotes(notes.filter(n => n.id !== filteredNotes[modal.index!].id));
         closeModal();
-        Alert.alert('Thành công', 'Đã xóa ghi chú');
+        Alert.alert(t('notes.success'), t('notes.deleteSuccess'));
       } catch (error: any) {
-        Alert.alert('Lỗi', error.message || 'Không thể xóa ghi chú');
+        Alert.alert(t('notes.error'), error.message || t('notes.deleteError'));
       }
     }
   };
@@ -211,7 +211,7 @@ const NotesListScreen = ({ navigation }: any) => {
         setNotes(newNotes);
       }
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể thay đổi trạng thái ghim');
+      Alert.alert(t('notes.error'), error.message || t('notes.pinError'));
     }
   };
 
@@ -222,19 +222,19 @@ const NotesListScreen = ({ navigation }: any) => {
 
   const handleCreateCategory = () => {
     if (!newCategory.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên danh mục');
+      Alert.alert(t('notes.error'), t('notes.categoryNameRequired'));
       return;
     }
 
     if (categories.includes(newCategory.trim())) {
-      Alert.alert('Lỗi', 'Danh mục này đã tồn tại');
+      Alert.alert(t('notes.error'), t('notes.categoryExists'));
       return;
     }
 
     setCategories([...categories, newCategory.trim()]);
     setTemp(t => ({ ...t, category: newCategory.trim() }));
     setModal({ type: null });
-    Alert.alert('Thành công', 'Đã tạo danh mục mới');
+    Alert.alert(t('notes.success'), t('notes.categoryAdded'));
   };
 
   const handleNotePress = (note: Note) => {
@@ -253,10 +253,10 @@ const NotesListScreen = ({ navigation }: any) => {
         </View>
       ))}
       <TouchableOpacity onPress={() => {
-        const newTag = prompt('Nhập tag mới');
+        const newTag = prompt(t('notes.enterTag'));
         if (newTag && newTag.trim()) setTemp(t => ({ ...t, tags: [...(t.tags || []), newTag.trim()] }));
       }} style={{ backgroundColor: currentTheme.colors.primary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
-        <Text style={{ color: '#fff' }}>+ Tag</Text>
+        <Text style={{ color: '#fff' }}>{t('notes.addTag')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -265,14 +265,14 @@ const NotesListScreen = ({ navigation }: any) => {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={currentTheme.colors.primary} />
-        <Text style={{ marginTop: 16, color: currentTheme.colors.textSecondary }}>Đang tải...</Text>
+        <Text style={{ marginTop: 16, color: currentTheme.colors.textSecondary }}>{t('notes.loading')}</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: currentTheme.colors.background }]}>
-      <Text style={[styles.title, { color: currentTheme.colors.text }]}>Ghi chú của bạn</Text>
+      <Text style={[styles.title, { color: currentTheme.colors.text }]}>{t('notes.yourNotes')}</Text>
 
       {/* Search */}
       <TextInput
@@ -281,7 +281,7 @@ const NotesListScreen = ({ navigation }: any) => {
           color: currentTheme.colors.text,
           borderColor: currentTheme.colors.border
         }]}
-        placeholder="Tìm kiếm ghi chú..."
+        placeholder={t('notes.searchPlaceholder')}
         placeholderTextColor={currentTheme.colors.textSecondary}
         value={search}
         onChangeText={setSearch}
@@ -292,10 +292,10 @@ const NotesListScreen = ({ navigation }: any) => {
         {/* Category filter */}
         <View style={styles.filterSection}>
           <View style={styles.filterHeader}>
-            <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>Danh mục:</Text>
+            <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>{t('notes.category')}</Text>
             <TouchableOpacity onPress={handleAddCategory} style={[styles.addCategoryBtn, { backgroundColor: currentTheme.colors.primary + '20' }]}>
               <Ionicons name="add" size={16} color={currentTheme.colors.primary} />
-              <Text style={[styles.addCategoryText, { color: currentTheme.colors.primary }]}>Thêm</Text>
+              <Text style={[styles.addCategoryText, { color: currentTheme.colors.primary }]}>{t('notes.addCategory')}</Text>
             </TouchableOpacity>
           </View>
           <FlatList
@@ -327,7 +327,7 @@ const NotesListScreen = ({ navigation }: any) => {
 
         {/* Priority filter */}
         <View style={styles.filterSection}>
-          <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>Độ ưu tiên:</Text>
+          <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>{t('notes.priority')}</Text>
           <FlatList
             horizontal
             data={priorities}

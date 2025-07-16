@@ -22,12 +22,14 @@ import {
   getCategories,
   createNote,
 } from '../../services/notesService';
+import { useTranslation } from 'react-i18next';
 
 interface RouteParams {
   noteId?: string;
 }
 
 const NoteEditorScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const { noteId } = route.params as RouteParams;
@@ -60,9 +62,9 @@ const NoteEditorScreen: React.FC = () => {
   const fetchCategories = async () => {
     try {
       const fetchedCategories = await getCategories();
-      setCategories(['Chung', ...fetchedCategories.filter(cat => cat !== 'Chung')]);
+      setCategories([t('notes.general'), ...fetchedCategories.filter(cat => cat !== t('notes.general'))]);
     } catch (error: any) {
-      console.error('Error fetching categories:', error);
+      console.error(t('notes.error'), error);
     }
   };
 
@@ -82,7 +84,7 @@ const NoteEditorScreen: React.FC = () => {
       setIsPublic(fetchedNote.isPublic);
       setIsPinned(fetchedNote.isPinned);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tải ghi chú');
+      Alert.alert(t('notes.error'), error.message || t('notes.loadError'));
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -128,12 +130,12 @@ const NoteEditorScreen: React.FC = () => {
 
   const handleCreateCategory = () => {
     if (!newCategory.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên danh mục');
+      Alert.alert(t('notes.error'), t('notes.categoryNameRequired'));
       return;
     }
     
     if (categories.includes(newCategory.trim())) {
-      Alert.alert('Lỗi', 'Danh mục này đã tồn tại');
+      Alert.alert(t('notes.error'), t('notes.categoryExists'));
       return;
     }
     
@@ -142,12 +144,12 @@ const NoteEditorScreen: React.FC = () => {
     setShowCategoryInput(false);
     setNewCategory('');
     setHasChanges(true);
-    Alert.alert('Thành công', 'Đã tạo danh mục mới');
+    Alert.alert(t('notes.success'), t('notes.categoryAdded'));
   };
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      Alert.alert(t('notes.error'), t('notes.titleRequired'));
       return;
     }
 
@@ -166,16 +168,16 @@ const NoteEditorScreen: React.FC = () => {
 
       if (noteId) {
         await updateNote(noteId, noteData);
-        Alert.alert('Thành công', 'Đã cập nhật ghi chú');
+        Alert.alert(t('notes.success'), t('notes.editSuccess'));
       } else {
         await createNote(noteData);
-        Alert.alert('Thành công', 'Đã tạo ghi chú mới');
+        Alert.alert(t('notes.success'), t('notes.addSuccess'));
       }
       
       setHasChanges(false);
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể lưu ghi chú');
+      Alert.alert(t('notes.error'), error.message || t('notes.addError'));
     } finally {
       setSaving(false);
     }
@@ -185,20 +187,20 @@ const NoteEditorScreen: React.FC = () => {
     if (!noteId) return;
     
     Alert.alert(
-      'Xóa ghi chú',
-      'Bạn có chắc chắn muốn xóa ghi chú này không?',
+      t('notes.deleteNote'),
+      t('notes.deleteConfirm') || 'Bạn có chắc chắn muốn xóa ghi chú này không?',
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t('common.confirm'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteNote(noteId);
-              Alert.alert('Thành công', 'Đã xóa ghi chú');
+              Alert.alert(t('notes.success'), t('notes.deleteSuccess'));
               navigation.goBack();
             } catch (error: any) {
-              Alert.alert('Lỗi', error.message || 'Không thể xóa ghi chú');
+              Alert.alert(t('notes.error'), error.message || t('notes.deleteError'));
             }
           },
         },
@@ -218,11 +220,11 @@ const NoteEditorScreen: React.FC = () => {
   const handleBack = () => {
     if (hasChanges) {
       Alert.alert(
-        'Thoát',
-        'Bạn có thay đổi chưa lưu. Bạn có muốn thoát không?',
+        t('common.cancel'),
+        t('notes.unsavedChanges') || 'Bạn có thay đổi chưa lưu. Bạn có muốn thoát không?',
         [
-          { text: 'Hủy', style: 'cancel' },
-          { text: 'Thoát', onPress: () => navigation.goBack() },
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('common.confirm'), onPress: () => navigation.goBack() },
         ]
       );
     } else {
@@ -234,7 +236,7 @@ const NoteEditorScreen: React.FC = () => {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>Đang tải...</Text>
+        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>{t('notes.loading')}</Text>
       </View>
     );
   }
@@ -275,7 +277,7 @@ const NoteEditorScreen: React.FC = () => {
         {/* Title */}
         <TextInput
           style={styles.titleInput}
-          placeholder="Tiêu đề ghi chú..."
+          placeholder={t('notes.titlePlaceholder') || 'Tiêu đề ghi chú...'}
           value={title}
           onChangeText={setTitle}
           placeholderTextColor={COLORS.textSecondary}
@@ -284,7 +286,7 @@ const NoteEditorScreen: React.FC = () => {
         {/* Description */}
         <TextInput
           style={styles.descriptionInput}
-          placeholder="Mô tả ngắn gọn (tùy chọn)..."
+          placeholder={t('notes.descriptionPlaceholder') || 'Mô tả ngắn gọn (tùy chọn)...'}
           value={description}
           onChangeText={setDescription}
           placeholderTextColor={COLORS.textSecondary}
@@ -294,7 +296,7 @@ const NoteEditorScreen: React.FC = () => {
         {/* Priority and Category */}
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Text style={styles.metaLabel}>Độ ưu tiên:</Text>
+            <Text style={styles.metaLabel}>{t('notes.priority')}</Text>
             <View style={styles.priorityContainer}>
               {(['low', 'medium', 'high'] as const).map((p) => (
                 <TouchableOpacity
@@ -309,7 +311,7 @@ const NoteEditorScreen: React.FC = () => {
                     styles.priorityText,
                     priority === p && styles.priorityTextActive
                   ]}>
-                    {p === 'low' ? 'Thấp' : p === 'medium' ? 'TB' : 'Cao'}
+                    {p === 'low' ? t('notes.priorityLow') : p === 'medium' ? t('notes.priorityMedium') : t('notes.priorityHigh')}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -318,17 +320,17 @@ const NoteEditorScreen: React.FC = () => {
 
           <View style={styles.metaItem}>
             <View style={styles.metaLabelRow}>
-              <Text style={styles.metaLabel}>Danh mục:</Text>
+              <Text style={styles.metaLabel}>{t('notes.category')}</Text>
               <TouchableOpacity onPress={handleAddCategory} style={styles.addCategoryBtn}>
                 <Ionicons name="add" size={16} color={COLORS.primary} />
-                <Text style={styles.addCategoryText}>Thêm</Text>
+                <Text style={styles.addCategoryText}>{t('notes.addCategory')}</Text>
               </TouchableOpacity>
             </View>
             {showCategoryInput ? (
               <View style={styles.categoryInputContainer}>
                 <TextInput
                   style={styles.categoryInput}
-                  placeholder="Nhập tên danh mục mới..."
+                  placeholder={t('notes.categoryNamePlaceholder') || 'Nhập tên danh mục mới...'}
                   value={newCategory}
                   onChangeText={setNewCategory}
                   onSubmitEditing={handleCreateCategory}
@@ -361,7 +363,7 @@ const NoteEditorScreen: React.FC = () => {
 
         {/* Tags */}
         <View style={styles.tagsSection}>
-          <Text style={styles.sectionTitle}>Tags:</Text>
+          <Text style={styles.sectionTitle}>{t('notes.tags')}</Text>
           <View style={styles.tagsContainer}>
             {tags.map((tag, index) => (
               <View key={index} style={styles.tag}>
@@ -375,7 +377,7 @@ const NoteEditorScreen: React.FC = () => {
           <View style={styles.addTagContainer}>
             <TextInput
               style={styles.tagInput}
-              placeholder="Thêm tag..."
+              placeholder={t('notes.addTagPlaceholder') || 'Thêm tag...'}
               value={newTag}
               onChangeText={setNewTag}
               onSubmitEditing={addTag}
@@ -399,7 +401,7 @@ const NoteEditorScreen: React.FC = () => {
               color={isPublic ? COLORS.primary : COLORS.textSecondary} 
             />
             <Text style={[styles.toggleText, isPublic && styles.toggleTextActive]}>
-              {isPublic ? 'Công khai' : 'Riêng tư'}
+              {isPublic ? t('notes.public') : t('notes.private')}
             </Text>
           </TouchableOpacity>
 
@@ -413,17 +415,17 @@ const NoteEditorScreen: React.FC = () => {
               color={isPinned ? COLORS.primary : COLORS.textSecondary} 
             />
             <Text style={[styles.toggleText, isPinned && styles.toggleTextActive]}>
-              {isPinned ? 'Đã ghim' : 'Ghim'}
+              {isPinned ? t('notes.pinned') : t('notes.pin')}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Content */}
         <View style={styles.contentSection}>
-          <Text style={styles.sectionTitle}>Nội dung:</Text>
+          <Text style={styles.sectionTitle}>{t('notes.content')}</Text>
           <TextInput
             style={styles.contentInput}
-            placeholder="Viết nội dung ghi chú của bạn..."
+            placeholder={t('notes.contentPlaceholder') || 'Viết nội dung ghi chú của bạn...'}
             value={content}
             onChangeText={setContent}
             placeholderTextColor={COLORS.textSecondary}
