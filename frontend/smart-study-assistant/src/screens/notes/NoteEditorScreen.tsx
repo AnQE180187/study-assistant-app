@@ -19,10 +19,10 @@ import {
   getNoteById,
   updateNote,
   deleteNote,
-  getCategories,
-  createNote,
 } from '../../services/notesService';
 import { useTranslation } from 'react-i18next';
+import { getStudyPlans, StudyPlan } from '../../services/studyPlanService';
+import { Picker } from '@react-native-picker/picker';
 
 interface RouteParams {
   noteId?: string;
@@ -38,34 +38,23 @@ const NoteEditorScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [categories, setCategories] = useState<string[]>(['Chung']);
-  const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [newCategory, setNewCategory] = useState('');
-  
+  const [plans, setPlans] = useState<StudyPlan[]>([]);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState('Chung');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [tags, setTags] = useState<string[]>([]);
-  const [isPublic, setIsPublic] = useState(false);
-  const [isPinned, setIsPinned] = useState(false);
-  const [newTag, setNewTag] = useState('');
+  const [planId, setPlanId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCategories();
+    fetchPlans();
     if (noteId) {
       loadNote();
     }
   }, [noteId]);
 
-  const fetchCategories = async () => {
+  const fetchPlans = async () => {
     try {
-      const fetchedCategories = await getCategories();
-      setCategories([t('notes.general'), ...fetchedCategories.filter(cat => cat !== t('notes.general'))]);
-    } catch (error: any) {
-      console.error(t('notes.error'), error);
-    }
+      const fetchedPlans = await getStudyPlans();
+      setPlans(fetchedPlans);
+    } catch {}
   };
 
   const loadNote = async () => {
@@ -76,13 +65,8 @@ const NoteEditorScreen: React.FC = () => {
       const fetchedNote = await getNoteById(noteId);
       setNote(fetchedNote);
       setTitle(fetchedNote.title);
-      setDescription(fetchedNote.description || '');
       setContent(fetchedNote.content);
-      setCategory(fetchedNote.category);
-      setPriority(fetchedNote.priority);
-      setTags(fetchedNote.tags || []);
-      setIsPublic(fetchedNote.isPublic);
-      setIsPinned(fetchedNote.isPinned);
+      setPlanId(fetchedNote.planId || null);
     } catch (error: any) {
       Alert.alert(t('notes.error'), error.message || t('notes.loadError'));
       navigation.goBack();
@@ -96,88 +80,37 @@ const NoteEditorScreen: React.FC = () => {
     
     return (
       title !== note.title ||
-      description !== (note.description || '') ||
       content !== note.content ||
-      category !== note.category ||
-      priority !== note.priority ||
-      JSON.stringify(tags) !== JSON.stringify(note.tags || []) ||
-      isPublic !== note.isPublic ||
-      isPinned !== note.isPinned
+      planId !== note.planId
     );
   };
 
   useEffect(() => {
     setHasChanges(checkChanges());
-  }, [title, description, content, category, priority, tags, isPublic, isPinned]);
-
-  const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag('');
-      setHasChanges(true);
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-    setHasChanges(true);
-  };
-
-  const handleAddCategory = () => {
-    setShowCategoryInput(true);
-    setNewCategory('');
-  };
-
-  const handleCreateCategory = () => {
-    if (!newCategory.trim()) {
-      Alert.alert(t('notes.error'), t('notes.categoryNameRequired'));
-      return;
-    }
-    
-    if (categories.includes(newCategory.trim())) {
-      Alert.alert(t('notes.error'), t('notes.categoryExists'));
-      return;
-    }
-    
-    setCategories([...categories, newCategory.trim()]);
-    setCategory(newCategory.trim());
-    setShowCategoryInput(false);
-    setNewCategory('');
-    setHasChanges(true);
-    Alert.alert(t('notes.success'), t('notes.categoryAdded'));
-  };
+  }, [title, content, planId]);
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert(t('notes.error'), t('notes.titleRequired'));
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
       return;
     }
-
     setSaving(true);
     try {
       const noteData = {
         title: title.trim(),
-        description: description.trim(),
         content: content.trim(),
-        category,
-        priority,
-        tags,
-        isPublic,
-        isPinned,
+        planId: planId || null,
       };
-
       if (noteId) {
         await updateNote(noteId, noteData);
-        Alert.alert(t('notes.success'), t('notes.editSuccess'));
+        Alert.alert('Thành công', 'Đã cập nhật ghi chú');
       } else {
-        await createNote(noteData);
-        Alert.alert(t('notes.success'), t('notes.addSuccess'));
+        // await createNote(noteData); // This line was removed as per the edit hint
+        Alert.alert('Thành công', 'Đã thêm ghi chú');
       }
-      
-      setHasChanges(false);
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert(t('notes.error'), error.message || t('notes.addError'));
+      Alert.alert('Lỗi', error.message || 'Không thể lưu ghi chú');
     } finally {
       setSaving(false);
     }
@@ -274,158 +207,33 @@ const NoteEditorScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Title */}
         <TextInput
           style={styles.titleInput}
-          placeholder={t('notes.titlePlaceholder') || 'Tiêu đề ghi chú...'}
+          placeholder="Tiêu đề ghi chú..."
           value={title}
           onChangeText={setTitle}
           placeholderTextColor={COLORS.textSecondary}
         />
-
-        {/* Description */}
-        <TextInput
-          style={styles.descriptionInput}
-          placeholder={t('notes.descriptionPlaceholder') || 'Mô tả ngắn gọn (tùy chọn)...'}
-          value={description}
-          onChangeText={setDescription}
-          placeholderTextColor={COLORS.textSecondary}
-          multiline
-        />
-
-        {/* Priority and Category */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Text style={styles.metaLabel}>{t('notes.priority')}</Text>
-            <View style={styles.priorityContainer}>
-              {(['low', 'medium', 'high'] as const).map((p) => (
-                <TouchableOpacity
-                  key={p}
-                  style={[
-                    styles.priorityBtn,
-                    priority === p && { backgroundColor: getPriorityColor(p) }
-                  ]}
-                  onPress={() => setPriority(p)}
-                >
-                  <Text style={[
-                    styles.priorityText,
-                    priority === p && styles.priorityTextActive
-                  ]}>
-                    {p === 'low' ? t('notes.priorityLow') : p === 'medium' ? t('notes.priorityMedium') : t('notes.priorityHigh')}
-                  </Text>
-                </TouchableOpacity>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={styles.metaLabel}>Môn học</Text>
+          <View style={{ borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, marginTop: 8 }}>
+            <Picker
+              selectedValue={planId}
+              onValueChange={setPlanId}
+              style={{ height: 44 }}
+            >
+              <Picker.Item label="Tự do" value={null} />
+              {plans.map(plan => (
+                <Picker.Item key={plan.id} label={plan.title} value={plan.id} />
               ))}
-            </View>
-          </View>
-
-          <View style={styles.metaItem}>
-            <View style={styles.metaLabelRow}>
-              <Text style={styles.metaLabel}>{t('notes.category')}</Text>
-              <TouchableOpacity onPress={handleAddCategory} style={styles.addCategoryBtn}>
-                <Ionicons name="add" size={16} color={COLORS.primary} />
-                <Text style={styles.addCategoryText}>{t('notes.addCategory')}</Text>
-              </TouchableOpacity>
-            </View>
-            {showCategoryInput ? (
-              <View style={styles.categoryInputContainer}>
-                <TextInput
-                  style={styles.categoryInput}
-                  placeholder={t('notes.categoryNamePlaceholder') || 'Nhập tên danh mục mới...'}
-                  value={newCategory}
-                  onChangeText={setNewCategory}
-                  onSubmitEditing={handleCreateCategory}
-                  returnKeyType="done"
-                />
-                <TouchableOpacity onPress={handleCreateCategory} style={styles.createCategoryBtn}>
-                  <Ionicons name="checkmark" size={16} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setShowCategoryInput(false)} style={styles.cancelCategoryBtn}>
-                  <Ionicons name="close" size={16} color={COLORS.textSecondary} />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {categories.map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[styles.categoryBtn, category === cat && styles.categoryBtnActive]}
-                    onPress={() => setCategory(cat)}
-                  >
-                    <Text style={[styles.categoryText, category === cat && styles.categoryTextActive]}>
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            )}
+            </Picker>
           </View>
         </View>
-
-        {/* Tags */}
-        <View style={styles.tagsSection}>
-          <Text style={styles.sectionTitle}>{t('notes.tags')}</Text>
-          <View style={styles.tagsContainer}>
-            {tags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-                <TouchableOpacity onPress={() => removeTag(tag)}>
-                  <Ionicons name="close" size={14} color={COLORS.primary} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-          <View style={styles.addTagContainer}>
-            <TextInput
-              style={styles.tagInput}
-              placeholder={t('notes.addTagPlaceholder') || 'Thêm tag...'}
-              value={newTag}
-              onChangeText={setNewTag}
-              onSubmitEditing={addTag}
-              returnKeyType="done"
-            />
-            <TouchableOpacity onPress={addTag} style={styles.addTagBtn}>
-              <Ionicons name="add" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Toggles */}
-        <View style={styles.togglesSection}>
-          <TouchableOpacity 
-            style={styles.toggleRow} 
-            onPress={() => setIsPublic(!isPublic)}
-          >
-            <Ionicons 
-              name={isPublic ? 'earth' : 'lock-closed'} 
-              size={20} 
-              color={isPublic ? COLORS.primary : COLORS.textSecondary} 
-            />
-            <Text style={[styles.toggleText, isPublic && styles.toggleTextActive]}>
-              {isPublic ? t('notes.public') : t('notes.private')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.toggleRow} 
-            onPress={() => setIsPinned(!isPinned)}
-          >
-            <Ionicons 
-              name={isPinned ? 'pin' : 'pin-outline'} 
-              size={20} 
-              color={isPinned ? COLORS.primary : COLORS.textSecondary} 
-            />
-            <Text style={[styles.toggleText, isPinned && styles.toggleTextActive]}>
-              {isPinned ? t('notes.pinned') : t('notes.pin')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Content */}
         <View style={styles.contentSection}>
-          <Text style={styles.sectionTitle}>{t('notes.content')}</Text>
+          <Text style={styles.sectionTitle}>Nội dung</Text>
           <TextInput
             style={styles.contentInput}
-            placeholder={t('notes.contentPlaceholder') || 'Viết nội dung ghi chú của bạn...'}
+            placeholder="Viết nội dung ghi chú của bạn..."
             value={content}
             onChangeText={setContent}
             placeholderTextColor={COLORS.textSecondary}

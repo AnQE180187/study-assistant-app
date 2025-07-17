@@ -7,28 +7,16 @@ const createNote = async (req, res) => {
   try {
     const { 
       title, 
-      description, 
       content, 
-      tags, 
-      category, 
-      priority, 
-      color, 
-      isPublic, 
-      isPinned 
+      planId 
     } = req.body;
     const userId = req.user.id;
     
     const note = await prisma.note.create({
       data: { 
         title, 
-        description, 
         content, 
-        tags: tags || [], 
-        category: category || 'Chung', 
-        priority: priority || 'medium', 
-        color, 
-        isPublic: !!isPublic, 
-        isPinned: !!isPinned, 
+        planId: planId || null,
         userId 
       },
     });
@@ -44,46 +32,10 @@ const createNote = async (req, res) => {
 const getNotes = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { 
-      search, 
-      tags, 
-      category, 
-      priority, 
-      isPinned, 
-      sortBy = 'createdAt', 
-      sortOrder = 'desc' 
-    } = req.query;
-    
-    // Build where clause
-    const where = { userId };
-    
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-    
-    if (tags && tags.length > 0) {
-      where.tags = { hasSome: Array.isArray(tags) ? tags : [tags] };
-    }
-    
-    if (category) {
-      where.category = category;
-    }
-    
-    if (priority) {
-      where.priority = priority;
-    }
-    
-    if (isPinned !== undefined) {
-      where.isPinned = isPinned === 'true';
-    }
-    
     const notes = await prisma.note.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: { plan: true },
     });
     res.json(notes);
   } catch (error) {
@@ -114,14 +66,8 @@ const updateNote = async (req, res) => {
   try {
     const { 
       title, 
-      description, 
       content, 
-      tags, 
-      category, 
-      priority, 
-      color, 
-      isPublic, 
-      isPinned 
+      planId 
     } = req.body;
     
     const note = await prisma.note.findUnique({ where: { id: req.params.id } });
@@ -132,14 +78,8 @@ const updateNote = async (req, res) => {
       where: { id: req.params.id },
       data: { 
         title, 
-        description, 
         content, 
-        tags: tags || [], 
-        category, 
-        priority, 
-        color, 
-        isPublic: isPublic !== undefined ? !!isPublic : note.isPublic, 
-        isPinned: isPinned !== undefined ? !!isPinned : note.isPinned 
+        planId: planId || null
       },
     });
     res.json(updatedNote);

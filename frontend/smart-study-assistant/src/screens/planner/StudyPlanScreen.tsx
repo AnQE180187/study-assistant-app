@@ -116,6 +116,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
           startTime: temp.startTime,
           endTime: temp.endTime,
           note: temp.note.trim() || undefined,
+          date: selected, // luôn truyền date hợp lệ
         });
         const newSessions = [...sessions];
         newSessions[modal.index] = updated;

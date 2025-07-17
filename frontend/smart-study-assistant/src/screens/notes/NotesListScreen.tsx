@@ -20,51 +20,37 @@ import {
   getNotes,
   createNote,
   updateNote,
-  deleteNote,
-  togglePin,
-  getNoteStats,
-  getCategories
+  deleteNote
 } from '../../services/notesService';
+import { getStudyPlans, StudyPlan } from '../../services/studyPlanService';
 
 const NotesListScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const { currentTheme } = useTheme();
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(t('notes.all'));
-  const [selectedPriority, setSelectedPriority] = useState(t('notes.all'));
-  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [categories, setCategories] = useState<string[]>([t('notes.all')]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | 'category' | null, index?: number }>({ type: null });
+  const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
+  const [plans, setPlans] = useState<StudyPlan[]>([]);
   const [temp, setTemp] = useState({
     title: '',
-    description: '',
     content: '',
-    category: t('notes.general'),
-    priority: 'medium' as 'low' | 'medium' | 'high',
-    tags: [] as string[],
-    isPublic: false,
-    isPinned: false
+    planId: '', // luôn là string, '' là tự do
   });
-  const [newCategory, setNewCategory] = useState('');
-
-  const priorities = [t('notes.all'), 'low', 'medium', 'high'];
+  const [selectedPlanId, setSelectedPlanId] = useState(''); // '' là tất cả
 
   useEffect(() => {
     fetchNotes();
-    fetchCategories();
-  }, [search, selectedCategory, selectedPriority, showPinnedOnly]);
+    fetchPlans();
+  }, [search]);
 
   const fetchNotes = async () => {
     setLoading(true);
     try {
       const params: any = {};
       if (search) params.search = search;
-      if (selectedCategory !== t('notes.all')) params.category = selectedCategory;
-      if (selectedPriority !== t('notes.all')) params.priority = selectedPriority;
-      if (showPinnedOnly) params.isPinned = true;
+      if (selectedPlanId) params.planId = selectedPlanId;
 
       const fetchedNotes = await getNotes(params);
       setNotes(fetchedNotes);
@@ -75,55 +61,28 @@ const NotesListScreen = ({ navigation }: any) => {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchPlans = async () => {
     try {
-      const fetchedCategories = await getCategories();
-      setCategories([t('notes.all'), ...fetchedCategories.filter(cat => cat !== t('notes.all'))]);
-    } catch (error: any) {
-      console.error(t('notes.error'), error);
-    }
+      const fetchedPlans = await getStudyPlans();
+      setPlans(fetchedPlans);
+    } catch {}
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchNotes(), fetchCategories()]);
+    await Promise.all([fetchNotes()]);
     setRefreshing(false);
   };
 
-  const filteredNotes = notes.filter(note => {
-    if (selectedCategory !== t('notes.all') && note.category !== selectedCategory) return false;
-    if (selectedPriority !== t('notes.all') && note.priority !== selectedPriority) return false;
-    if (showPinnedOnly && !note.isPinned) return false;
-    return true;
-  });
-
   // Modal handlers
   const openAdd = () => {
-    setTemp({
-      title: '',
-      description: '',
-      content: '',
-      category: t('notes.general'),
-      priority: 'medium',
-      tags: [],
-      isPublic: false,
-      isPinned: false
-    });
+    setTemp({ title: '', content: '', planId: '' });
     setModal({ type: 'add' });
   };
 
   const openEdit = (i: number) => {
-    const note = filteredNotes[i];
-    setTemp({
-      title: note.title,
-      description: note.description || '',
-      content: note.content,
-      category: note.category,
-      priority: note.priority,
-      tags: note.tags || [],
-      isPublic: note.isPublic,
-      isPinned: note.isPinned
-    });
+    const note = notes[i];
+    setTemp({ title: note.title, content: note.content, planId: note.planId || '' });
     setModal({ type: 'edit', index: i });
   };
 
@@ -133,47 +92,37 @@ const NotesListScreen = ({ navigation }: any) => {
   // CRUD operations
   const handleAdd = async () => {
     if (!temp.title?.trim()) {
-      Alert.alert(t('notes.error'), t('notes.titleRequired'));
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
       return;
     }
-
     try {
-      const newNote = await createNote({
+      const payload = {
         title: temp.title.trim(),
-        description: temp.description?.trim() || '',
         content: temp.content?.trim() || '',
-        category: temp.category,
-        priority: temp.priority,
-        tags: temp.tags,
-        isPublic: temp.isPublic,
-        isPinned: temp.isPinned,
-      });
+      };
+      if (temp.planId) payload['planId'] = temp.planId;
+      const newNote = await createNote(payload);
       setNotes([newNote, ...notes]);
       closeModal();
-      Alert.alert(t('notes.success'), t('notes.addSuccess'));
+      Alert.alert('Thành công', 'Đã thêm ghi chú');
     } catch (error: any) {
-      Alert.alert(t('notes.error'), error.message || t('notes.addError'));
+      Alert.alert('Lỗi', error.message || 'Không thể thêm ghi chú');
     }
   };
 
   const handleEdit = async () => {
     if (!temp.title?.trim()) {
-      Alert.alert(t('notes.error'), t('notes.titleRequired'));
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
       return;
     }
-
-    if (modal.index !== undefined && filteredNotes[modal.index]) {
+    if (modal.index !== undefined && notes[modal.index]) {
       try {
-        const updated = await updateNote(filteredNotes[modal.index].id, {
+        const payload = {
           title: temp.title.trim(),
-          description: temp.description?.trim() || '',
           content: temp.content?.trim() || '',
-          category: temp.category,
-          priority: temp.priority,
-          tags: temp.tags,
-          isPublic: temp.isPublic,
-          isPinned: temp.isPinned,
-        });
+        };
+        if (temp.planId) payload['planId'] = temp.planId;
+        const updated = await updateNote(notes[modal.index].id, payload);
         const newNotes = [...notes];
         const noteIndex = notes.findIndex(n => n.id === updated.id);
         if (noteIndex !== -1) {
@@ -181,18 +130,18 @@ const NotesListScreen = ({ navigation }: any) => {
           setNotes(newNotes);
         }
         closeModal();
-        Alert.alert(t('notes.success'), t('notes.editSuccess'));
+        Alert.alert('Thành công', 'Đã cập nhật ghi chú');
       } catch (error: any) {
-        Alert.alert(t('notes.error'), error.message || t('notes.editError'));
+        Alert.alert('Lỗi', error.message || 'Không thể cập nhật ghi chú');
       }
     }
   };
 
   const handleDelete = async () => {
-    if (modal.index !== undefined && modal.index >= 0 && filteredNotes[modal.index!]) {
+    if (modal.index !== undefined && modal.index >= 0 && notes[modal.index!]) {
       try {
-        await deleteNote(filteredNotes[modal.index!].id);
-        setNotes(notes.filter(n => n.id !== filteredNotes[modal.index!].id));
+        await deleteNote(notes[modal.index!].id);
+        setNotes(notes.filter(n => n.id !== notes[modal.index!].id));
         closeModal();
         Alert.alert(t('notes.success'), t('notes.deleteSuccess'));
       } catch (error: any) {
@@ -201,65 +150,9 @@ const NotesListScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleTogglePin = async (noteId: string) => {
-    try {
-      const updated = await togglePin(noteId);
-      const newNotes = [...notes];
-      const noteIndex = notes.findIndex(n => n.id === updated.id);
-      if (noteIndex !== -1) {
-        newNotes[noteIndex] = updated;
-        setNotes(newNotes);
-      }
-    } catch (error: any) {
-      Alert.alert(t('notes.error'), error.message || t('notes.pinError'));
-    }
-  };
-
-  const handleAddCategory = () => {
-    setNewCategory('');
-    setModal({ type: 'category' });
-  };
-
-  const handleCreateCategory = () => {
-    if (!newCategory.trim()) {
-      Alert.alert(t('notes.error'), t('notes.categoryNameRequired'));
-      return;
-    }
-
-    if (categories.includes(newCategory.trim())) {
-      Alert.alert(t('notes.error'), t('notes.categoryExists'));
-      return;
-    }
-
-    setCategories([...categories, newCategory.trim()]);
-    setTemp(t => ({ ...t, category: newCategory.trim() }));
-    setModal({ type: null });
-    Alert.alert(t('notes.success'), t('notes.categoryAdded'));
-  };
-
   const handleNotePress = (note: Note) => {
     navigation.navigate('NoteEditor', { noteId: note.id });
   };
-
-  // UI cho nhập tags
-  const renderTagInput = () => (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginVertical: 8 }}>
-      {(temp.tags || []).map((tag, idx) => (
-        <View key={idx} style={{ backgroundColor: currentTheme.colors.primary + '20', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6, flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ color: currentTheme.colors.primary }}>{tag}</Text>
-          <TouchableOpacity onPress={() => setTemp(t => ({ ...t, tags: (t.tags || []).filter((_, i) => i !== idx) }))}>
-            <Ionicons name="close" size={14} color={currentTheme.colors.primary} style={{ marginLeft: 4 }} />
-          </TouchableOpacity>
-        </View>
-      ))}
-      <TouchableOpacity onPress={() => {
-        const newTag = prompt(t('notes.enterTag'));
-        if (newTag && newTag.trim()) setTemp(t => ({ ...t, tags: [...(t.tags || []), newTag.trim()] }));
-      }} style={{ backgroundColor: currentTheme.colors.primary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
-        <Text style={{ color: '#fff' }}>{t('notes.addTag')}</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   if (loading && notes.length === 0) {
     return (
@@ -269,6 +162,12 @@ const NotesListScreen = ({ navigation }: any) => {
       </View>
     );
   }
+
+  const filteredNotes = selectedPlanId === ''
+    ? notes
+    : selectedPlanId === '__free__'
+      ? notes.filter(n => !n.planId)
+      : notes.filter(n => n.planId === selectedPlanId);
 
   return (
     <View style={[styles.container, { backgroundColor: currentTheme.colors.background }]}>
@@ -288,95 +187,46 @@ const NotesListScreen = ({ navigation }: any) => {
       />
 
       {/* Filters */}
-      <View style={styles.filtersContainer}>
-        {/* Category filter */}
-        <View style={styles.filterSection}>
-          <View style={styles.filterHeader}>
-            <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>{t('notes.category')}</Text>
-            <TouchableOpacity onPress={handleAddCategory} style={[styles.addCategoryBtn, { backgroundColor: currentTheme.colors.primary + '20' }]}>
-              <Ionicons name="add" size={16} color={currentTheme.colors.primary} />
-              <Text style={[styles.addCategoryText, { color: currentTheme.colors.primary }]}>{t('notes.addCategory')}</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            horizontal
-            data={categories}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.filterBtn, 
-                  { backgroundColor: currentTheme.colors.primary + '20' },
-                  selectedCategory === item && { backgroundColor: currentTheme.colors.primary }
-                ]}
-                onPress={() => setSelectedCategory(item)}
-              >
-                <Text style={[
-                  styles.filterText, 
-                  { color: currentTheme.colors.primary },
-                  selectedCategory === item && { color: currentTheme.colors.onPrimary }
-                ]}>
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            )}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterList}
-          />
-        </View>
-
-        {/* Priority filter */}
-        <View style={styles.filterSection}>
-          <Text style={[styles.filterLabel, { color: currentTheme.colors.text }]}>{t('notes.priority')}</Text>
-          <FlatList
-            horizontal
-            data={priorities}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.filterBtn, 
-                  { backgroundColor: currentTheme.colors.primary + '20' },
-                  selectedPriority === item && { backgroundColor: currentTheme.colors.primary }
-                ]}
-                onPress={() => setSelectedPriority(item)}
-              >
-                <Text style={[
-                  styles.filterText, 
-                  { color: currentTheme.colors.primary },
-                  selectedPriority === item && { color: currentTheme.colors.onPrimary }
-                ]}>
-                  {item === t('notes.all') ? t('notes.all') : item}
-                </Text>
-              </TouchableOpacity>
-            )}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterList}
-          />
-        </View>
-
-        {/* Pinned filter */}
+      <View style={{ flexDirection: 'row', marginBottom: 12 }}>
         <TouchableOpacity
-          style={[
-            styles.pinnedFilter, 
-            { backgroundColor: currentTheme.colors.primary + '20' },
-            showPinnedOnly && { backgroundColor: currentTheme.colors.primary }
-          ]}
-          onPress={() => setShowPinnedOnly(!showPinnedOnly)}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 16,
+            backgroundColor: selectedPlanId === '' ? currentTheme.colors.primary : currentTheme.colors.primary + '20',
+            marginRight: 8,
+          }}
+          onPress={() => setSelectedPlanId('')}
         >
-          <Ionicons
-            name={showPinnedOnly ? "pin" : "pin-outline"}
-            size={16}
-            color={showPinnedOnly ? currentTheme.colors.onPrimary : currentTheme.colors.primary}
-          />
-          <Text style={[
-            styles.pinnedFilterText, 
-            { color: currentTheme.colors.primary },
-            showPinnedOnly && { color: currentTheme.colors.onPrimary }
-          ]}>
-            {t('notes.onlyPinned')}
-          </Text>
+          <Text style={{ color: selectedPlanId === '' ? '#fff' : currentTheme.colors.primary, fontWeight: 'bold' }}>Tất cả</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 16,
+            backgroundColor: selectedPlanId === '__free__' ? currentTheme.colors.primary : currentTheme.colors.primary + '20',
+            marginRight: 8,
+          }}
+          onPress={() => setSelectedPlanId('__free__')}
+        >
+          <Text style={{ color: selectedPlanId === '__free__' ? '#fff' : currentTheme.colors.primary, fontWeight: 'bold' }}>Tự do</Text>
+        </TouchableOpacity>
+        {plans.map(plan => (
+          <TouchableOpacity
+            key={plan.id}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 16,
+              backgroundColor: selectedPlanId === plan.id ? currentTheme.colors.primary : currentTheme.colors.primary + '20',
+              marginRight: 8,
+            }}
+            onPress={() => setSelectedPlanId(plan.id)}
+          >
+            <Text style={{ color: selectedPlanId === plan.id ? '#fff' : currentTheme.colors.primary }}>{plan.title}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Notes List */}
@@ -399,19 +249,10 @@ const NotesListScreen = ({ navigation }: any) => {
           renderItem={({ item, index }) => (
             <NoteCard
               title={item.title}
-              description={item.description}
               content={item.content}
-              tags={item.tags}
-              category={item.category}
-              priority={item.priority}
-              color={item.color}
-              isPinned={item.isPinned}
-              isPublic={item.isPublic}
-              createdAt={item.createdAt}
               onPress={() => handleNotePress(item)}
               onEdit={() => openEdit(index)}
               onDelete={() => openDelete(index)}
-              onTogglePin={() => handleTogglePin(item.id)}
             />
           )}
           contentContainerStyle={{ paddingBottom: 80 }}
@@ -430,27 +271,12 @@ const NotesListScreen = ({ navigation }: any) => {
       <ModalCard
         visible={modal.type === 'add'}
         type="add"
-        title={t('notes.addNote')}
+        title="Thêm ghi chú"
         fields={[
-          { label: t('notes.title'), value: temp.title, onChange: v => setTemp(t => ({ ...t, title: v })) },
-          { label: t('notes.description'), value: temp.description, onChange: v => setTemp(t => ({ ...t, description: v })) },
-          { label: t('notes.content'), value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true },
-          {
-            label: t('notes.category'),
-            value: temp.category,
-            onChange: v => setTemp(t => ({ ...t, category: v })),
-            type: 'category',
-            categories: categories,
-            onAddCategory: handleAddCategory
-          },
+          { label: 'Tiêu đề', value: temp.title, onChange: v => setTemp(t => ({ ...t, title: v })) },
+          { label: 'Môn học', value: temp.planId, onChange: v => setTemp(t => ({ ...t, planId: v })), type: 'dropdown', options: [{ label: 'Tự do', value: '' }, ...plans.map(p => ({ label: p.title, value: p.id }))] },
+          { label: 'Nội dung', value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true, inputStyle: { minHeight: 120 } },
         ]}
-        extraContent={renderTagInput()}
-        isPublic={temp.isPublic}
-        onTogglePublic={() => setTemp(t => ({ ...t, isPublic: !t.isPublic }))}
-        isPinned={temp.isPinned}
-        onTogglePinned={() => setTemp(t => ({ ...t, isPinned: !t.isPinned }))}
-        priority={temp.priority}
-        onPriorityChange={(priority) => setTemp(t => ({ ...t, priority }))}
         onSubmit={handleAdd}
         onCancel={closeModal}
       />
@@ -458,27 +284,12 @@ const NotesListScreen = ({ navigation }: any) => {
       <ModalCard
         visible={modal.type === 'edit'}
         type="edit"
-        title={t('notes.editNote')}
+        title="Sửa ghi chú"
         fields={[
-          { label: t('notes.title'), value: temp.title, onChange: v => setTemp(t => ({ ...t, title: v })) },
-          { label: t('notes.description'), value: temp.description, onChange: v => setTemp(t => ({ ...t, description: v })) },
-          { label: t('notes.content'), value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true },
-          {
-            label: t('notes.category'),
-            value: temp.category,
-            onChange: v => setTemp(t => ({ ...t, category: v })),
-            type: 'category',
-            categories: categories,
-            onAddCategory: handleAddCategory
-          },
+          { label: 'Tiêu đề', value: temp.title, onChange: v => setTemp(t => ({ ...t, title: v })) },
+          { label: 'Môn học', value: temp.planId, onChange: v => setTemp(t => ({ ...t, planId: v })), type: 'dropdown', options: [{ label: 'Tự do', value: '' }, ...plans.map(p => ({ label: p.title, value: p.id }))] },
+          { label: 'Nội dung', value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true, inputStyle: { minHeight: 120 } },
         ]}
-        extraContent={renderTagInput()}
-        isPublic={temp.isPublic}
-        onTogglePublic={() => setTemp(t => ({ ...t, isPublic: !t.isPublic }))}
-        isPinned={temp.isPinned}
-        onTogglePinned={() => setTemp(t => ({ ...t, isPinned: !t.isPinned }))}
-        priority={temp.priority}
-        onPriorityChange={(priority) => setTemp(t => ({ ...t, priority }))}
         onSubmit={handleEdit}
         onCancel={closeModal}
       />
@@ -488,17 +299,6 @@ const NotesListScreen = ({ navigation }: any) => {
         type="delete"
         title={t('notes.deleteNote')}
         onSubmit={handleDelete}
-        onCancel={closeModal}
-      />
-
-      <ModalCard
-        visible={modal.type === 'category'}
-        type="add"
-        title={t('notes.addCategory')}
-        fields={[
-          { label: t('notes.categoryName'), value: newCategory, onChange: setNewCategory },
-        ]}
-        onSubmit={handleCreateCategory}
         onCancel={closeModal}
       />
     </View>

@@ -2,15 +2,17 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Modal, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
 import { COLORS, SIZES } from '../constants/themes';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
-type Field = { 
-  label: string; 
-  value: string; 
-  onChange: (v: string) => void; 
+type Field = {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
   multiline?: boolean;
-  type?: 'text' | 'category';
+  type?: 'text' | 'category' | 'dropdown';
   categories?: string[];
   onAddCategory?: () => void;
+  options?: { label: string; value: string }[];
 };
 
 type Props = {
@@ -29,15 +31,15 @@ type Props = {
   onPriorityChange?: (priority: 'low' | 'medium' | 'high') => void;
 };
 
-const ModalCard: React.FC<Props> = ({ 
-  visible, 
-  type, 
-  title, 
-  fields = [], 
-  onSubmit, 
-  onCancel, 
-  extraContent, 
-  isPublic, 
+const ModalCard: React.FC<Props> = ({
+  visible,
+  type,
+  title,
+  fields = [],
+  onSubmit,
+  onCancel,
+  extraContent,
+  isPublic,
   onTogglePublic,
   isPinned,
   onTogglePinned,
@@ -78,7 +80,19 @@ const ModalCard: React.FC<Props> = ({
               {type !== 'delete' && fields.map((f, i) => (
                 <View key={i} style={styles.fieldWrap}>
                   <Text style={styles.label}>{f.label}</Text>
-                  {f.type === 'category' && f.categories ? (
+                  {f.type === 'dropdown' && f.options ? (
+                    <View style={{ borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, marginTop: 8 }}>
+                      <Picker
+                        selectedValue={f.value}
+                        onValueChange={f.onChange}
+                        style={{ height: 44 }}
+                      >
+                        {f.options.map(opt => (
+                          <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
+                        ))}
+                      </Picker>
+                    </View>
+                  ) : f.type === 'category' && f.categories ? (
                     <View style={styles.categoryContainer}>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         {f.categories.map((cat) => (

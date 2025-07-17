@@ -129,16 +129,18 @@ const updateStudyPlan = async (req, res) => {
     const plan = await prisma.studyPlan.findUnique({ where: { id: req.params.id } });
     if (!plan) return res.status(404).json({ message: 'Study plan not found' });
     if (plan.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+
+    const data = {};
+    if (title !== undefined) data.title = title;
+    if (date && !isNaN(Date.parse(date))) data.date = new Date(date);
+    if (startTime !== undefined) data.startTime = startTime;
+    if (endTime !== undefined) data.endTime = endTime;
+    if (note !== undefined) data.note = note;
+    if (completed !== undefined) data.completed = completed;
+
     const updatedPlan = await prisma.studyPlan.update({
       where: { id: req.params.id },
-      data: { 
-        title, 
-        date: new Date(date), 
-        startTime: startTime || plan.startTime || '09:00', 
-        endTime: endTime || plan.endTime || '10:00', 
-        note: note || '',
-        completed: completed !== undefined ? completed : plan.completed
-      },
+      data,
     });
     res.json(updatedPlan);
   } catch (error) {
