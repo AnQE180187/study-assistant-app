@@ -6,12 +6,16 @@ const {
   getDeckById,
   updateDeck,
   deleteDeck,
-  getPublicDecks
+  getPublicDecks,
+  getAllDecksAdmin
 } = require('../controllers/deckController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, admin } = require('../middlewares/authMiddleware');
 
 // Public decks
 router.route('/public').get(getPublicDecks);
+
+// Route cho admin lấy tất cả deck
+router.get('/all', protect, admin, getAllDecksAdmin);
 
 // Các route dưới đây cần đăng nhập
 router.use(protect);

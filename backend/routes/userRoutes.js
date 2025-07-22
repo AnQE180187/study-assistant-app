@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, getUserProfile, updateProfile, changePassword, updateLanguage, updateTheme, forgotPassword, resetPassword, verifyOtpForgot } = require('../controllers/userController');
+const { registerUser, loginUser, getUserProfile, updateProfile, changePassword, updateLanguage, updateTheme, forgotPassword, resetPassword, verifyOtpForgot, getAllUsers } = require('../controllers/userController');
 const { sendOtp, verifyOtpAndRegister } = require('../controllers/authController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, admin } = require('../middlewares/authMiddleware');
 
 // Public routes
 router.post('/', registerUser);
@@ -14,6 +14,7 @@ router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtpAndRegister);
 
 // Protected routes
+router.get('/', protect, admin, getAllUsers);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);

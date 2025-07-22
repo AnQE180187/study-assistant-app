@@ -1,0 +1,29 @@
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+export interface FlashcardSet {
+  id: string;
+  title: string;
+  description: string;
+  flashcards: any[];
+}
+
+export const getFlashcardSets = async () => {
+  const res = await axios.get<FlashcardSet[]>(`${API_URL}/api/flashcard-sets`);
+  return res.data;
+};
+
+export const addFlashcardSet = async (data: Omit<FlashcardSet, 'id' | 'flashcards'>) => {
+  const res = await axios.post<FlashcardSet>(`${API_URL}/api/flashcard-sets`, data);
+  return res.data;
+};
+
+export const updateFlashcardSet = async (id: string, data: Partial<FlashcardSet>) => {
+  const res = await axios.put<FlashcardSet>(`${API_URL}/api/flashcard-sets/${id}`, data);
+  return res.data;
+};
+
+export const deleteFlashcardSet = async (id: string) => {
+  await axios.delete(`${API_URL}/api/flashcard-sets/${id}`);
+}; 

@@ -49,15 +49,31 @@ const getDeckById = async (req, res) => {
   }
 };
 
-// @desc    Update a deck
-// @route   PUT /api/decks/:id
-// @access  Private
+// @desc    Get all decks (admin only)
+// @route   GET /api/decks/all
+// @access  Private/Admin
+const getAllDecksAdmin = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized as admin' });
+    }
+    const decks = await prisma.deck.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { flashcards: true }
+    });
+    res.json(decks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Sửa updateDeck để cho phép admin update mọi deck
 const updateDeck = async (req, res) => {
   try {
     const { title, description, tags, isPublic } = req.body;
     const deck = await prisma.deck.findUnique({ where: { id: req.params.id } });
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
-    if (deck.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (deck.userId !== req.user.id && req.user.role !== 'admin') return res.status(401).json({ message: 'Not authorized' });
     const updatedDeck = await prisma.deck.update({
       where: { id: req.params.id },
       data: { title, description, tags, isPublic },
@@ -68,15 +84,12 @@ const updateDeck = async (req, res) => {
   }
 };
 
-// @desc    Delete a deck (and its flashcards)
-// @route   DELETE /api/decks/:id
-// @access  Private
+// Sửa deleteDeck để cho phép admin xóa mọi deck
 const deleteDeck = async (req, res) => {
   try {
     const deck = await prisma.deck.findUnique({ where: { id: req.params.id }, include: { flashcards: true } });
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
-    if (deck.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
-    // Xóa flashcards con
+    if (deck.userId !== req.user.id && req.user.role !== 'admin') return res.status(401).json({ message: 'Not authorized' });
     await prisma.flashcard.deleteMany({ where: { deckId: deck.id } });
     await prisma.deck.delete({ where: { id: req.params.id } });
     res.json({ message: 'Deck and its flashcards removed' });
@@ -118,6 +131,7 @@ module.exports = {
   createDeck,
   getDecks,
   getDeckById,
+  getAllDecksAdmin,
   updateDeck,
   deleteDeck,
   getPublicDecks,

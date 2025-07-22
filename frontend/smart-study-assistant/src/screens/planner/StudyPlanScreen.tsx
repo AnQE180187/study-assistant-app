@@ -215,7 +215,7 @@ const StudyPlanScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('study_plan.title')}</Text>
+      <Text style={styles.title}>{t('Study plan')}</Text>
       <Calendar
         current={selected}
         onDayPress={day => setSelected(day.dateString)}

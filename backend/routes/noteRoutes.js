@@ -5,9 +5,10 @@ const {
   getNotes,
   getNoteById,
   updateNote,
-  deleteNote
+  deleteNote,
+  getAllNotesAdmin
 } = require('../controllers/noteController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, admin } = require('../middlewares/authMiddleware');
 
 router.use(protect);
 
@@ -19,5 +20,8 @@ router.route('/:id')
   .get(getNoteById)
   .put(updateNote)
   .delete(deleteNote);
+
+// Route cho admin lấy tất cả notes
+router.get('/all', protect, admin, getAllNotesAdmin);
 
 module.exports = router; 

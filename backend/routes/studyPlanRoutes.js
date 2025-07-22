@@ -8,9 +8,10 @@ const {
   deleteStudyPlan,
   getStudyPlansByRange,
   toggleStudyPlanCompletion,
-  getStudyPlanStats
+  getStudyPlanStats,
+  getAllStudyPlansAdmin
 } = require('../controllers/studyPlanController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, admin } = require('../middlewares/authMiddleware');
 
 router.use(protect);
 
@@ -28,5 +29,8 @@ router.route('/:id')
 router.route('/range').get(getStudyPlansByRange);
 router.route('/stats').get(getStudyPlanStats);
 router.route('/:id/toggle').patch(toggleStudyPlanCompletion);
+
+// Route cho admin lấy tất cả study plans
+router.get('/all', protect, admin, getAllStudyPlansAdmin);
 
 module.exports = router; 

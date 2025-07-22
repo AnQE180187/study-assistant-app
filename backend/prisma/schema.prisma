@@ -34,6 +34,7 @@ model User {
   decks         Deck[]
   isVerified    Boolean      @default(false)
   verifyToken   String?
+  aiLogs        AiLog[]      // Thêm dòng này để hoàn thiện quan hệ với AiLog
 }
 
 model Note {
@@ -105,5 +106,14 @@ model Otp {
   email     String
   otp       String
   expiresAt DateTime
+  createdAt DateTime @default(now())
+} 
+
+model AiLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  prompt    String
+  response  String
   createdAt DateTime @default(now())
 } 

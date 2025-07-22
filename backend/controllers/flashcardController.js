@@ -1,5 +1,6 @@
 const prisma = require('../config/prismaClient');
 const { generateFlashcardsFromGemini, sendFlashcardsToInternalAPI } = require('../services/geminiAgent');
+const { createAiLog } = require('./aiLogController');
 
 // @desc    Create a new flashcard in a deck
 // @route   POST /api/decks/:deckId/flashcards
@@ -449,16 +450,25 @@ async function generateAndSaveFlashcards(req, res) {
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
     if (deck.userId !== userId) return res.status(401).json({ message: 'Not authorized' });
     // Gọi Gemini
-    let flashcards;
+    let flashcards, geminiResponseText;
     try {
+      const { generateFlashcardsFromGemini } = require('../services/geminiAgent');
       flashcards = await generateFlashcardsFromGemini(keyword, count, language);
+      geminiResponseText = JSON.stringify(flashcards);
     } catch (geminiErr) {
       console.error('Gemini error:', geminiErr);
       return res.status(500).json({ message: geminiErr.message || 'Gemini AI error' });
     }
+    // Lưu log AI
+    try {
+      await createAiLog(userId, keyword, geminiResponseText);
+    } catch (logErr) {
+      console.error('Lỗi lưu log AI:', logErr);
+    }
     // Gửi từng flashcard vào API nội bộ
     let results;
     try {
+      const { sendFlashcardsToInternalAPI } = require('../services/geminiAgent');
       results = await sendFlashcardsToInternalAPI(flashcards, deckId, req.headers.authorization?.replace('Bearer ', ''));
     } catch (apiErr) {
       console.error('Internal API error:', apiErr);

@@ -120,15 +120,31 @@ const getStudyPlanById = async (req, res) => {
   }
 };
 
-// @desc    Update a study plan
-// @route   PUT /api/studyplans/:id
-// @access  Private
+// @desc    Get all study plans (admin only)
+// @route   GET /api/studyplans/all
+// @access  Private/Admin
+const getAllStudyPlansAdmin = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized as admin' });
+    }
+    const plans = await prisma.studyPlan.findMany({
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+      include: { user: { select: { name: true, email: true } } }
+    });
+    res.json(plans);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Sửa updateStudyPlan để cho phép admin update mọi plan
 const updateStudyPlan = async (req, res) => {
   try {
     const { title, date, startTime, endTime, note, completed } = req.body;
     const plan = await prisma.studyPlan.findUnique({ where: { id: req.params.id } });
     if (!plan) return res.status(404).json({ message: 'Study plan not found' });
-    if (plan.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (plan.userId !== req.user.id && req.user.role !== 'admin') return res.status(401).json({ message: 'Not authorized' });
 
     const data = {};
     if (title !== undefined) data.title = title;
@@ -148,14 +164,12 @@ const updateStudyPlan = async (req, res) => {
   }
 };
 
-// @desc    Delete a study plan
-// @route   DELETE /api/studyplans/:id
-// @access  Private
+// Sửa deleteStudyPlan để cho phép admin xóa mọi plan
 const deleteStudyPlan = async (req, res) => {
   try {
     const plan = await prisma.studyPlan.findUnique({ where: { id: req.params.id } });
     if (!plan) return res.status(404).json({ message: 'Study plan not found' });
-    if (plan.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (plan.userId !== req.user.id && req.user.role !== 'admin') return res.status(401).json({ message: 'Not authorized' });
     await prisma.studyPlan.delete({ where: { id: req.params.id } });
     res.json({ message: 'Study plan removed' });
   } catch (error) {
@@ -252,6 +266,7 @@ module.exports = {
   createStudyPlan,
   getStudyPlans,
   getStudyPlanById,
+  getAllStudyPlansAdmin,
   updateStudyPlan,
   deleteStudyPlan,
   getStudyPlansByRange,

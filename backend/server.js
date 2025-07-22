@@ -8,6 +8,7 @@ const noteRoutes = require('./routes/noteRoutes');
 const deckRoutes = require('./routes/deckRoutes');
 const flashcardRoutes = require('./routes/flashcardRoutes');
 const studyPlanRoutes = require('./routes/studyPlanRoutes');
+const aiLogRoutes = require('./routes/aiLogRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/decks', deckRoutes);
 app.use('/api', flashcardRoutes);
 app.use('/api/studyplans', studyPlanRoutes);
+app.use('/api/ai', aiLogRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -59,28 +59,34 @@ const getNoteById = async (req, res) => {
   }
 };
 
-// @desc    Update a note
-// @route   PUT /api/notes/:id
-// @access  Private
+// @desc    Get all notes (admin only)
+// @route   GET /api/notes/all
+// @access  Private/Admin
+const getAllNotesAdmin = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized as admin' });
+    }
+    const notes = await prisma.note.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { plan: true, user: { select: { name: true, email: true } } }
+    });
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Sửa updateNote để cho phép admin update mọi note
 const updateNote = async (req, res) => {
   try {
-    const { 
-      title, 
-      content, 
-      planId 
-    } = req.body;
-    
+    const { title, content, planId } = req.body;
     const note = await prisma.note.findUnique({ where: { id: req.params.id } });
     if (!note) return res.status(404).json({ message: 'Note not found' });
-    if (note.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
-    
+    if (note.userId !== req.user.id && req.user.role !== 'admin') return res.status(401).json({ message: 'Not authorized' });
     const updatedNote = await prisma.note.update({
       where: { id: req.params.id },
-      data: { 
-        title, 
-        content, 
-        planId: planId || null
-      },
+      data: { title, content, planId: planId || null },
     });
     res.json(updatedNote);
   } catch (error) {
@@ -88,14 +94,12 @@ const updateNote = async (req, res) => {
   }
 };
 
-// @desc    Delete a note
-// @route   DELETE /api/notes/:id
-// @access  Private
+// Sửa deleteNote để cho phép admin xóa mọi note
 const deleteNote = async (req, res) => {
   try {
     const note = await prisma.note.findUnique({ where: { id: req.params.id } });
     if (!note) return res.status(404).json({ message: 'Note not found' });
-    if (note.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (note.userId !== req.user.id && req.user.role !== 'admin') return res.status(401).json({ message: 'Not authorized' });
     await prisma.note.delete({ where: { id: req.params.id } });
     res.json({ message: 'Note removed' });
   } catch (error) {
@@ -269,5 +273,6 @@ module.exports = {
   getNoteStats, 
   getPublicNotes, 
   bulkDeleteNotes, 
-  getCategories 
+  getCategories,
+  getAllNotesAdmin
 }; 

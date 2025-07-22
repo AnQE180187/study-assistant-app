@@ -353,6 +353,31 @@ const updateTheme = async (req, res) => {
   }
 };
 
+// @desc    Get all users (admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+const getAllUsers = async (req, res) => {
+  try {
+    // Chỉ cho phép admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized as admin' });
+    }
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -364,4 +389,5 @@ module.exports = {
   forgotPassword: exports.forgotPassword, // ensure OTP version is exported
   resetPassword: exports.resetPassword,   // ensure OTP version is exported
   verifyOtpForgot: exports.verifyOtpForgot, // add this line
+  getAllUsers,
 }; 
