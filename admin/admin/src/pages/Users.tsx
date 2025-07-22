@@ -5,6 +5,28 @@ import { Box, Typography, TextField, IconButton, Table, TableBody, TableCell, Ta
 import DeleteIcon from '@mui/icons-material/Delete';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SearchIcon from '@mui/icons-material/Search';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+
+const columns: GridColDef[] = [
+  { field: 'id', headerName: 'ID', width: 220 },
+  { field: 'name', headerName: 'Name', width: 150 },
+  { field: 'email', headerName: 'Email', width: 200 },
+  { field: 'role', headerName: 'Role', width: 100 },
+  { field: 'education', headerName: 'Education', width: 150 },
+  { field: 'gender', headerName: 'Gender', width: 100 },
+  { 
+    field: 'dateOfBirth', 
+    headerName: 'Date of Birth', 
+    width: 150,
+    renderCell: (params: GridRenderCellParams<any, any>) => params.value ? new Date(params.value).toLocaleDateString() : 'N/A',
+  },
+  {
+    field: 'createdAt',
+    headerName: 'Created At',
+    width: 180,
+  },
+];
 
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);

@@ -2,13 +2,12 @@ import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import UsersPage from './pages/Users';
 import FlashcardsPage from './pages/Flashcards';
-import NotesPage from './pages/Notes';
-import PlansPage from './pages/Plans';
 import AiLogsPage from './pages/AiLogs';
 import LoginPage from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import { Box } from '@mui/material';
+import FlashcardDeckDetailsPage from './pages/FlashcardDeckDetails';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -29,8 +28,7 @@ const App: React.FC = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/users" element={<RequireAuth><UsersPage /></RequireAuth>} />
             <Route path="/flashcards" element={<RequireAuth><FlashcardsPage /></RequireAuth>} />
-            <Route path="/notes" element={<RequireAuth><NotesPage /></RequireAuth>} />
-            <Route path="/plans" element={<RequireAuth><PlansPage /></RequireAuth>} />
+            <Route path="/flashcards/decks/:deckId" element={<RequireAuth><FlashcardDeckDetailsPage /></RequireAuth>} />
             <Route path="/ai-logs" element={<RequireAuth><AiLogsPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to={token ? "/users" : "/login"} />} />
           </Routes>

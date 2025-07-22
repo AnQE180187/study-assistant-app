@@ -73,6 +73,19 @@ const getFlashcardsByDeck = async (req, res) => {
   }
 };
 
+const getFlashcardsByDeckForAdmin = async (req, res) => {
+  try {
+    const { deckId } = req.params;
+    const flashcards = await prisma.flashcard.findMany({
+      where: { deckId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(flashcards);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 // @desc    Get a single flashcard
 // @route   GET /api/flashcards/:id
 // @access  Private
@@ -449,11 +462,13 @@ async function generateAndSaveFlashcards(req, res) {
     const deck = await prisma.deck.findUnique({ where: { id: deckId }, select: { userId: true } });
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
     if (deck.userId !== userId) return res.status(401).json({ message: 'Not authorized' });
+    // Lấy học vấn hiện tại của user
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { education: true } });
     // Gọi Gemini
     let flashcards, geminiResponseText;
     try {
       const { generateFlashcardsFromGemini } = require('../services/geminiAgent');
-      flashcards = await generateFlashcardsFromGemini(keyword, count, language);
+      flashcards = await generateFlashcardsFromGemini(keyword, count, language, user?.education);
       geminiResponseText = JSON.stringify(flashcards);
     } catch (geminiErr) {
       console.error('Gemini error:', geminiErr);
@@ -497,5 +512,6 @@ module.exports = {
   getPublicFlashcards,
   searchPublicFlashcards,
   getPublicFlashcardsByDeck,
+  getFlashcardsByDeckForAdmin,
   generateAndSaveFlashcards,
 }; 

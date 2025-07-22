@@ -166,17 +166,17 @@ const FlashcardManagementScreen: React.FC = () => {
       </View>
       
       <TouchableOpacity style={styles.addButton} onPress={openAdd} disabled={operationLoading}>
-        <Text style={styles.addButtonText}>{t('flashcards.addFlashcard')}</Text>
+        <Text style={styles.addButtonText}>{t('add new Flashcard')}</Text>
       </TouchableOpacity>
       
       {flashcards.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Ionicons name="document-text-outline" size={64} color={COLORS.textSecondary} />
           <Text style={{ marginTop: 16, color: COLORS.textSecondary, fontSize: 16 }}>
-            {t('flashcards.noFlashcards')}
+            {t('no Flashcards')}
           </Text>
           <TouchableOpacity style={styles.createFirstBtn} onPress={openAdd}>
-            <Text style={styles.createFirstText}>{t('flashcards.addFirstFlashcard')}</Text>
+            <Text style={styles.createFirstText}>{t('add First Flashcard')}</Text>
           </TouchableOpacity>
         </View>
       ) : (

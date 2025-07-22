@@ -13,9 +13,10 @@ const {
   bulkUpdateFlashcards,
   exportFlashcards,
   importFlashcards,
-  generateAndSaveFlashcards
+  generateAndSaveFlashcards,
+  getFlashcardsByDeckForAdmin
 } = require('../controllers/flashcardController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, admin } = require('../middlewares/authMiddleware');
 
 // Public route - không cần authentication
 router.get('/decks/:deckId/flashcards/public', getPublicFlashcardsByDeck);
@@ -48,5 +49,8 @@ router.post('/flashcards/import', importFlashcards);
 
 // Route AI Gemini flashcard generation
 router.post('/ai/generate-flashcards', protect, generateAndSaveFlashcards);
+
+// Admin routes
+router.get('/admin/decks/:deckId/flashcards', protect, admin, getFlashcardsByDeckForAdmin);
 
 module.exports = router; 

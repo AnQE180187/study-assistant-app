@@ -21,6 +21,7 @@ model User {
   avatar        String?      // URL to avatar image
   dateOfBirth   DateTime?    // Date of birth
   gender        String?      // male, female, other
+  education     String?      // Học vấn hiện tại
   language      String       @default("vi") // vi, en
   theme         String       @default("light") // light, dark
   resetPasswordToken String?

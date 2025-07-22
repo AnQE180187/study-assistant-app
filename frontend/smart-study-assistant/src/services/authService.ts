@@ -28,7 +28,14 @@ export const resetPassword = async (email: string, token: string, newPassword: s
   return res.data;
 };
 
-export const getProfile = async (token: string): Promise<{ id: string; name: string; email: string; role: string; createdAt: string }> => {
+export const getProfile = async (token: string): Promise<{
+  id: string;
+  name: string;
+  email: string;
+  education?: string;
+  role: string;
+  createdAt: string;
+}> => {
   const res = await api.get('/users/profile', { headers: { Authorization: `Bearer ${token}` } });
   return res.data;
 }; 
@@ -53,6 +60,7 @@ export interface UserProfile {
   avatar?: string;
   dateOfBirth?: string;
   gender?: string;
+  education?: string;
   role: string;
   language: string;
   theme: string;
@@ -63,6 +71,7 @@ export const updateProfile = async (data: {
   name?: string;
   dateOfBirth?: string;
   gender?: string;
+  education?: string;
 }): Promise<UserProfile> => {
   const res = await api.put('/users/profile', data);
   return res.data;

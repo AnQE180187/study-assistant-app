@@ -26,4 +26,30 @@ export const updateFlashcardSet = async (id: string, data: Partial<FlashcardSet>
 
 export const deleteFlashcardSet = async (id: string) => {
   await axios.delete(`${API_URL}/api/flashcard-sets/${id}`);
+};
+
+export const getPublicDecks = async (): Promise<any[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    const { data } = await axios.get(`${API_URL}/decks/public`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  } catch (error) {
+    console.error('Error fetching public decks:', error);
+    return [];
+  }
+};
+
+export const getFlashcardsByDeckForAdmin = async (deckId: string): Promise<any[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    const { data } = await axios.get(`${API_URL}/admin/decks/${deckId}/flashcards`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  } catch (error) {
+    console.error('Error fetching flashcards for admin:', error);
+    return [];
+  }
 }; 

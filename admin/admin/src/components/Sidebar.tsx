@@ -11,8 +11,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const menu = [
   { label: 'Users', icon: <PeopleIcon />, path: '/users' },
   { label: 'Flashcards', icon: <StyleIcon />, path: '/flashcards' },
-  { label: 'Notes', icon: <NoteIcon />, path: '/notes' },
-  { label: 'Plans', icon: <EventNoteIcon />, path: '/plans' },
   { label: 'AI Logs', icon: <MemoryIcon />, path: '/ai-logs' },
 ];
 

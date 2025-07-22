@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // baseURL: 'http://10.0.2.2:5000/api', // Thay đổi nếu cần
-  baseURL: 'https://study-assitant-app-backend.onrender.com/api', // Đã cập nhật sang backend production
+  baseURL: 'http://10.0.2.2:5000/api', // Thay đổi nếu cần
+  // baseURL: 'https://study-assitant-app-backend.onrender.com/api', // Đã cập nhật sang backend production
   timeout: 10000,
 });
 

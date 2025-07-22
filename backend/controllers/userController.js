@@ -97,6 +97,7 @@ const getUserProfile = async (req, res) => {
         avatar: true,
         dateOfBirth: true,
         gender: true,
+        education: true,
         role: true,
         language: true,
         theme: true,
@@ -230,7 +231,7 @@ exports.resetPassword = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const { name, dateOfBirth, gender } = req.body;
+    const { name, dateOfBirth, gender, education } = req.body;
     const userId = req.user.id;
 
     const updatedUser = await prisma.user.update({
@@ -239,6 +240,7 @@ const updateProfile = async (req, res) => {
         name: name || undefined,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
         gender: gender || undefined,
+        education: education || undefined,
       },
       select: {
         id: true,
@@ -247,6 +249,7 @@ const updateProfile = async (req, res) => {
         avatar: true,
         dateOfBirth: true,
         gender: true,
+        education: true,
         role: true,
         language: true,
         theme: true,
@@ -369,6 +372,9 @@ const getAllUsers = async (req, res) => {
         email: true,
         role: true,
         createdAt: true,
+        education: true,
+        gender: true,
+        dateOfBirth: true,
       },
       orderBy: { createdAt: 'desc' },
     });

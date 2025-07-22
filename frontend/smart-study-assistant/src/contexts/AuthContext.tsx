@@ -11,6 +11,7 @@ interface User {
   avatar?: string;
   dateOfBirth?: string;
   gender?: string;
+  education?: string;
   role: string;
   language: string;
   theme: string;
@@ -69,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: response.id,
         email: response.email,
         name: response.name,
+        ...(response.education ? { education: response.education } : {}),
         role: response.role || 'student',
         language: 'vi',
         theme: 'light',
@@ -80,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: response.id,
         email: response.email,
         name: response.name,
+        ...(response.education ? { education: response.education } : {}),
         role: response.role || 'student',
         language: 'vi',
         theme: 'light',
@@ -104,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: response.id,
         email: response.email,
         name: response.name,
+        ...(response.education ? { education: response.education } : {}),
         role: response.role || 'student',
         language: 'vi',
         theme: 'light',
@@ -115,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: response.id,
         email: response.email,
         name: response.name,
+        ...(response.education ? { education: response.education } : {}),
         role: response.role || 'student',
         language: 'vi',
         theme: 'light',

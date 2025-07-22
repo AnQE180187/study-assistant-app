@@ -24,6 +24,8 @@ router.route('/')
   .post(createDeck)
   .get(getDecks);
 
+router.get('/public', getPublicDecks);
+
 router.route('/:id')
   .get(getDeckById)
   .put(updateDeck)

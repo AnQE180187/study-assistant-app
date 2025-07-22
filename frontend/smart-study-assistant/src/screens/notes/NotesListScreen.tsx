@@ -33,12 +33,13 @@ const NotesListScreen = ({ navigation }: any) => {
   const [refreshing, setRefreshing] = useState(false);
   const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
   const [plans, setPlans] = useState<StudyPlan[]>([]);
-  const [temp, setTemp] = useState({
+  const [temp, setTemp] = useState<{ title: string; content: string; planId: string }>({
     title: '',
     content: '',
     planId: '', // luôn là string, '' là tự do
   });
   const [selectedPlanId, setSelectedPlanId] = useState(''); // '' là tất cả
+  const [showAllPlans, setShowAllPlans] = useState(false);
 
   useEffect(() => {
     fetchNotes();
@@ -187,7 +188,7 @@ const NotesListScreen = ({ navigation }: any) => {
       />
 
       {/* Filters */}
-      <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>
         <TouchableOpacity
           style={{
             paddingHorizontal: 12,
@@ -195,6 +196,7 @@ const NotesListScreen = ({ navigation }: any) => {
             borderRadius: 16,
             backgroundColor: selectedPlanId === '' ? currentTheme.colors.primary : currentTheme.colors.primary + '20',
             marginRight: 8,
+            marginBottom: 8,
           }}
           onPress={() => setSelectedPlanId('')}
         >
@@ -207,12 +209,13 @@ const NotesListScreen = ({ navigation }: any) => {
             borderRadius: 16,
             backgroundColor: selectedPlanId === '__free__' ? currentTheme.colors.primary : currentTheme.colors.primary + '20',
             marginRight: 8,
+            marginBottom: 8,
           }}
           onPress={() => setSelectedPlanId('__free__')}
         >
           <Text style={{ color: selectedPlanId === '__free__' ? '#fff' : currentTheme.colors.primary, fontWeight: 'bold' }}>Tự do</Text>
         </TouchableOpacity>
-        {plans.map(plan => (
+        {(showAllPlans ? plans : plans.slice(0, 4)).map(plan => (
           <TouchableOpacity
             key={plan.id}
             style={{
@@ -221,12 +224,28 @@ const NotesListScreen = ({ navigation }: any) => {
               borderRadius: 16,
               backgroundColor: selectedPlanId === plan.id ? currentTheme.colors.primary : currentTheme.colors.primary + '20',
               marginRight: 8,
+              marginBottom: 8,
             }}
             onPress={() => setSelectedPlanId(plan.id)}
           >
             <Text style={{ color: selectedPlanId === plan.id ? '#fff' : currentTheme.colors.primary }}>{plan.title}</Text>
           </TouchableOpacity>
         ))}
+        {plans.length > 4 && (
+          <TouchableOpacity
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 16,
+              backgroundColor: currentTheme.colors.primary + '20',
+              marginRight: 8,
+              marginBottom: 8,
+            }}
+            onPress={() => setShowAllPlans(!showAllPlans)}
+          >
+            <Text style={{ color: currentTheme.colors.primary, fontWeight: 'bold' }}>{showAllPlans ? 'Less' : 'More'}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Notes List */}
@@ -275,7 +294,7 @@ const NotesListScreen = ({ navigation }: any) => {
         fields={[
           { label: 'Tiêu đề', value: temp.title, onChange: v => setTemp(t => ({ ...t, title: v })) },
           { label: 'Môn học', value: temp.planId, onChange: v => setTemp(t => ({ ...t, planId: v })), type: 'dropdown', options: [{ label: 'Tự do', value: '' }, ...plans.map(p => ({ label: p.title, value: p.id }))] },
-          { label: 'Nội dung', value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true, inputStyle: { minHeight: 120 } },
+          { label: 'Nội dung', value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true },
         ]}
         onSubmit={handleAdd}
         onCancel={closeModal}
@@ -288,7 +307,7 @@ const NotesListScreen = ({ navigation }: any) => {
         fields={[
           { label: 'Tiêu đề', value: temp.title, onChange: v => setTemp(t => ({ ...t, title: v })) },
           { label: 'Môn học', value: temp.planId, onChange: v => setTemp(t => ({ ...t, planId: v })), type: 'dropdown', options: [{ label: 'Tự do', value: '' }, ...plans.map(p => ({ label: p.title, value: p.id }))] },
-          { label: 'Nội dung', value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true, inputStyle: { minHeight: 120 } },
+          { label: 'Nội dung', value: temp.content, onChange: v => setTemp(t => ({ ...t, content: v })), multiline: true },
         ]}
         onSubmit={handleEdit}
         onCancel={closeModal}

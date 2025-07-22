@@ -42,7 +42,9 @@ const getDeckById = async (req, res) => {
       include: { flashcards: true },
     });
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
-    if (deck.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (deck.userId !== req.user.id && !deck.isPublic) {
+      return res.status(401).json({ message: 'Not authorized to view this deck' });
+    }
     res.json(deck);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -103,26 +105,17 @@ const deleteDeck = async (req, res) => {
 // @access  Public
 const getPublicDecks = async (req, res) => {
   try {
-    console.log('Fetching public decks...');
     const decks = await prisma.deck.findMany({
       where: { isPublic: true },
-      orderBy: { createdAt: 'desc' },
-      include: { 
-        flashcards: {
-          orderBy: { createdAt: 'asc' }
-        }
+      include: {
+        _count: {
+          select: { flashcards: true },
+        },
       },
-    });
-    console.log(`Found ${decks.length} public decks`);
-    decks.forEach(deck => {
-      console.log(`Deck ${deck.title} (${deck.id}): ${deck.flashcards.length} flashcards`);
-      deck.flashcards.forEach(card => {
-        console.log(`  - Flashcard: ${card.term} -> ${card.definition} (user: ${card.userId})`);
-      });
+      orderBy: { createdAt: 'desc' },
     });
     res.json(decks);
   } catch (error) {
-    console.error('Error fetching public decks:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -130,9 +123,9 @@ const getPublicDecks = async (req, res) => {
 module.exports = {
   createDeck,
   getDecks,
+  getPublicDecks,
   getDeckById,
   getAllDecksAdmin,
   updateDeck,
   deleteDeck,
-  getPublicDecks,
 }; 

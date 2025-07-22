@@ -14,11 +14,13 @@ router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtpAndRegister);
 
 // Protected routes
-router.get('/', protect, admin, getAllUsers);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 router.put('/language', protect, updateLanguage);
 router.put('/theme', protect, updateTheme);
+
+// Admin routes
+router.get('/', protect, admin, getAllUsers);
 
 module.exports = router; 

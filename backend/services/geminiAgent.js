@@ -10,13 +10,16 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 /**
  * Gửi prompt đến Gemini và nhận về danh sách flashcard dạng [{question, answer}]
  * @param {string} keyword - Chủ đề hoặc từ khóa do người dùng nhập
+ * @param {number} count - Số lượng flashcard
+ * @param {string} language - Ngôn ngữ
+ * @param {string} education - Học vấn hiện tại của user
  * @returns {Promise<Array<{question: string, answer: string}>>}
  */
-async function generateFlashcardsFromGemini(keyword, count = 10, language = 'vi') {
+async function generateFlashcardsFromGemini(keyword, count = 10, language = 'vi', education) {
   // Map code sang tên ngôn ngữ
   const langMap = { vi: 'tiếng Việt', en: 'English', ja: 'Japanese' };
   const langName = langMap[language] || 'tiếng Việt';
-  const prompt = `Hãy tạo CHÍNH XÁC ${count} flashcard về chủ đề "${keyword}" bằng ngôn ngữ ${langName}. Trả về MỘT mảng JSON gồm ${count} phần tử, mỗi phần tử có dạng: { "question": "...", "answer": "..." }. Không giải thích gì thêm, chỉ trả về JSON array.`;
+  const prompt = `Hãy tạo CHÍNH XÁC ${count} flashcard về chủ đề "${keyword}" bằng ngôn ngữ ${langName}. Học vấn hiện tại của người dùng là: ${education || 'không xác định'}. Hãy đảm bảo nội dung phù hợp với trình độ học vấn này. Trả về MỘT mảng JSON gồm ${count} phần tử, mỗi phần tử có dạng: { "question": "...", "answer": "..." }. Không giải thích gì thêm, chỉ trả về JSON array.`;
   let model;
   try {
     model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });

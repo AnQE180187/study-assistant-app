@@ -43,6 +43,7 @@ const ProfileScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [gender, setGender] = useState('');
+  const [education, setEducation] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGenderPicker, setShowGenderPicker] = useState(false);
 
@@ -62,6 +63,7 @@ const ProfileScreen: React.FC = () => {
       setName(user.name || '');
       setDateOfBirth(user.dateOfBirth ? new Date(user.dateOfBirth) : null);
       setGender(user.gender || '');
+      setEducation(user.education || '');
     }
   }, [user]);
 
@@ -77,6 +79,7 @@ const ProfileScreen: React.FC = () => {
         name: name.trim(),
         dateOfBirth: dateOfBirth?.toISOString(),
         gender,
+        education: education.trim(),
       });
       setProfile(updatedProfile);
       Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
@@ -160,6 +163,14 @@ const ProfileScreen: React.FC = () => {
             label={t('profile.name')}
             value={name}
             onChangeText={setName}
+            style={styles.input}
+            mode="outlined"
+          />
+
+          <TextInput
+            label={t('profile.education') || 'Học vấn hiện tại'}
+            value={education}
+            onChangeText={setEducation}
             style={styles.input}
             mode="outlined"
           />
