@@ -12,17 +12,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum EducationLevel {
+  ELEMENTARY    // Tiểu học
+  MIDDLE_SCHOOL // Trung học cơ sở
+  HIGH_SCHOOL   // Trung học phổ thông
+  UNIVERSITY    // Đại học
+  GRADUATE      // Sau đại học
+  OTHER         // Khác
+}
+
+enum PermissionType {
+  READ_USERS
+  WRITE_USERS
+  DELETE_USERS
+  READ_FLASHCARDS
+  WRITE_FLASHCARDS
+  DELETE_FLASHCARDS
+  READ_AI_LOGS
+  WRITE_AI_LOGS
+  DELETE_AI_LOGS
+  MANAGE_SYSTEM
+}
+
 model User {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   email         String       @unique
   password      String
-  role          String       @default("student") // student, teacher, admin
-  avatar        String?      // URL to avatar image
-  dateOfBirth   DateTime?    // Date of birth
-  gender        String?      // male, female, other
-  education     String?      // Học vấn hiện tại
-  language      String       @default("vi") // vi, en
+  role          UserRole        @default(USER)
+  avatar        String?         // URL to avatar image
+  dateOfBirth   DateTime?       // Date of birth
+  gender        String?         // male, female, other
+  education     EducationLevel? // Trình độ học vấn
+  language      String       @default("en") // vi, en
   theme         String       @default("light") // light, dark
   resetPasswordToken String?
   resetPasswordExpires DateTime?
@@ -44,6 +71,8 @@ model Note {
   content     String      // Nội dung note
   planId      String?     @db.ObjectId // Liên kết với StudyPlan nếu có
   plan        StudyPlan?  @relation(fields: [planId], references: [id])
+  priority    String      @default("medium") // low, medium, high, urgent
+  tags        String[]    @default([]) // Array of tags
   userId      String      @db.ObjectId
   user        User        @relation(fields: [userId], references: [id])
   createdAt   DateTime    @default(now())
@@ -117,4 +146,23 @@ model AiLog {
   prompt    String
   response  String
   createdAt DateTime @default(now())
-} 
+}
+
+model Permission {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  name        PermissionType   @unique
+  description String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  role         UserRole
+  permissionId String     @db.ObjectId
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@unique([role, permissionId])
+}

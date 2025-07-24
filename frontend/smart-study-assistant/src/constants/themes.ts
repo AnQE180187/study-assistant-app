@@ -1,26 +1,28 @@
-import colors from './colors';
+import colors from "./colors";
 
 export const lightTheme = {
   colors: {
-    primary: '#6200EE',
-    primaryVariant: '#3700B3',
-    secondary: '#03DAC6',
-    secondaryVariant: '#018786',
-    background: '#F5F6FA',
-    surface: '#FFFFFF',
-    error: '#B00020',
-    onPrimary: '#FFFFFF',
-    onSecondary: '#000000',
-    onBackground: '#000000',
-    onSurface: '#000000',
-    onError: '#FFFFFF',
-    text: '#000000',
-    textSecondary: '#666666',
-    border: '#E0E0E0',
-    card: '#FFFFFF',
-    success: '#4CAF50',
-    warning: '#FF9800',
-    info: '#2196F3',
+    primary: "#667eea",
+    primaryVariant: "#764ba2",
+    secondary: "#f093fb",
+    secondaryVariant: "#f5576c",
+    background: "#F8FAFC",
+    surface: "#FFFFFF",
+    error: "#EF4444",
+    onPrimary: "#FFFFFF",
+    onSecondary: "#FFFFFF",
+    onBackground: "#1E293B",
+    onSurface: "#1E293B",
+    onError: "#FFFFFF",
+    text: "#1E293B",
+    textSecondary: "#64748B",
+    border: "#E2E8F0",
+    card: "#FFFFFF",
+    success: "#10B981",
+    warning: "#F59E0B",
+    info: "#3B82F6",
+    accent: "#8B5CF6",
+    muted: "#F1F5F9",
   },
   spacing: {
     xs: 4,
@@ -39,25 +41,27 @@ export const lightTheme = {
 
 export const darkTheme = {
   colors: {
-    primary: '#BB86FC',
-    primaryVariant: '#3700B3',
-    secondary: '#03DAC6',
-    secondaryVariant: '#018786',
-    background: '#121212',
-    surface: '#1E1E1E',
-    error: '#CF6679',
-    onPrimary: '#000000',
-    onSecondary: '#000000',
-    onBackground: '#FFFFFF',
-    onSurface: '#FFFFFF',
-    onError: '#000000',
-    text: '#FFFFFF',
-    textSecondary: '#B0B0B0',
-    border: '#333333',
-    card: '#2D2D2D',
-    success: '#4CAF50',
-    warning: '#FF9800',
-    info: '#2196F3',
+    primary: "#8B5CF6",
+    primaryVariant: "#7C3AED",
+    secondary: "#EC4899",
+    secondaryVariant: "#DB2777",
+    background: "#0F172A",
+    surface: "#1E293B",
+    error: "#F87171",
+    onPrimary: "#FFFFFF",
+    onSecondary: "#FFFFFF",
+    onBackground: "#F8FAFC",
+    onSurface: "#F8FAFC",
+    onError: "#FFFFFF",
+    text: "#F8FAFC",
+    textSecondary: "#94A3B8",
+    border: "#334155",
+    card: "#1E293B",
+    success: "#34D399",
+    warning: "#FBBF24",
+    info: "#60A5FA",
+    accent: "#A78BFA",
+    muted: "#334155",
   },
   spacing: {
     xs: 4,
@@ -77,23 +81,23 @@ export const darkTheme = {
 export type Theme = typeof lightTheme;
 
 export const COLORS = {
-  primary: '#8B5CF6', // tím vừa
-  primaryLight: '#E9D5FF',
-  secondary: '#7C3AED',
-  background: '#F8FAFC',
-  card: '#FFFFFF',
-  text: '#1E293B',
-  textSecondary: '#64748B',
-  border: '#E5E7EB',
-  error: '#EF4444',
-  success: '#22C55E',
-  warning: '#F59E42',
+  primary: "#8B5CF6", // tím vừa
+  primaryLight: "#E9D5FF",
+  secondary: "#7C3AED",
+  background: "#F8FAFC",
+  card: "#FFFFFF",
+  text: "#1E293B",
+  textSecondary: "#64748B",
+  border: "#E5E7EB",
+  error: "#EF4444",
+  success: "#22C55E",
+  warning: "#F59E42",
 };
 
 export const FONTS = {
-  regular: 'System',
-  medium: 'System',
-  bold: 'System',
+  regular: "System",
+  medium: "System",
+  bold: "System",
 };
 
 export const SIZES = {
@@ -104,9 +108,9 @@ export const SIZES = {
 };
 
 export const SHADOW = {
-  shadowColor: '#000',
+  shadowColor: "#000",
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.08,
   shadowRadius: 8,
   elevation: 2,
-}; 
+};

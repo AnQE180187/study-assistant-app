@@ -1,9 +1,10 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const axios = require('axios');
-require('dotenv').config();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const axios = require("axios");
+require("dotenv").config();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const INTERNAL_API_BASE = process.env.INTERNAL_API_BASE || 'http://localhost:5000/api';
+const INTERNAL_API_BASE =
+  process.env.INTERNAL_API_BASE || "http://localhost:5000/api";
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -15,38 +16,46 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
  * @param {string} education - Học vấn hiện tại của user
  * @returns {Promise<Array<{question: string, answer: string}>>}
  */
-async function generateFlashcardsFromGemini(keyword, count = 10, language = 'vi', education) {
+async function generateFlashcardsFromGemini(
+  keyword,
+  count = 10,
+  language = "vi",
+  education
+) {
   // Map code sang tên ngôn ngữ
-  const langMap = { vi: 'tiếng Việt', en: 'English', ja: 'Japanese' };
-  const langName = langMap[language] || 'tiếng Việt';
-  const prompt = `Hãy tạo CHÍNH XÁC ${count} flashcard về chủ đề "${keyword}" bằng ngôn ngữ ${langName}. Học vấn hiện tại của người dùng là: ${education || 'không xác định'}. Hãy đảm bảo nội dung phù hợp với trình độ học vấn này. Trả về MỘT mảng JSON gồm ${count} phần tử, mỗi phần tử có dạng: { "question": "...", "answer": "..." }. Không giải thích gì thêm, chỉ trả về JSON array.`;
+  const langMap = { vi: "tiếng Việt", en: "English", ja: "Japanese" };
+  const langName = langMap[language] || "English";
+  const prompt = `Hãy tạo CHÍNH XÁC ${count} flashcard về chủ đề "${keyword}" bằng ngôn ngữ ${langName}. Học vấn hiện tại của người dùng là: ${
+    education || "không xác định"
+  }. Hãy đảm bảo nội dung phù hợp với trình độ học vấn này. Trả về MỘT mảng JSON gồm ${count} phần tử, mỗi phần tử có dạng: { "question": "...", "answer": "..." }. Không giải thích gì thêm, chỉ trả về JSON array.`;
   let model;
   try {
-    model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   } catch (e) {
-    throw new Error('Không khởi tạo được model Gemini: ' + e.message);
+    throw new Error("Không khởi tạo được model Gemini: " + e.message);
   }
   let result, text;
   try {
     result = await model.generateContent(prompt);
     text = result.response.text();
   } catch (err) {
-    console.error('Lỗi gọi Gemini:', err);
-    throw new Error('Lỗi gọi Gemini: ' + (err.message || err));
+    console.error("Lỗi gọi Gemini:", err);
+    throw new Error("Lỗi gọi Gemini: " + (err.message || err));
   }
   const jsonMatch = text.match(/\[.*\]/s);
   if (!jsonMatch) {
-    console.error('Gemini không trả về JSON hợp lệ:', text);
-    throw new Error('Gemini không trả về JSON hợp lệ');
+    console.error("Gemini không trả về JSON hợp lệ:", text);
+    throw new Error("Gemini không trả về JSON hợp lệ");
   }
   let flashcards;
   try {
     flashcards = JSON.parse(jsonMatch[0]);
   } catch (e) {
-    console.error('Lỗi parse JSON từ Gemini:', e, text);
-    throw new Error('Lỗi parse JSON từ Gemini: ' + e.message);
+    console.error("Lỗi parse JSON từ Gemini:", e, text);
+    throw new Error("Lỗi parse JSON từ Gemini: " + e.message);
   }
-  if (!Array.isArray(flashcards)) throw new Error('Kết quả không phải mảng flashcard');
+  if (!Array.isArray(flashcards))
+    throw new Error("Kết quả không phải mảng flashcard");
   return flashcards;
 }
 
@@ -68,7 +77,10 @@ async function sendFlashcardsToInternalAPI(flashcards, deckId, token) {
       );
       results.push({ success: true, data: res.data });
     } catch (err) {
-      results.push({ success: false, error: err.response?.data || err.message });
+      results.push({
+        success: false,
+        error: err.response?.data || err.message,
+      });
     }
   }
   return results;
@@ -77,4 +89,4 @@ async function sendFlashcardsToInternalAPI(flashcards, deckId, token) {
 module.exports = {
   generateFlashcardsFromGemini,
   sendFlashcardsToInternalAPI,
-}; 
+};

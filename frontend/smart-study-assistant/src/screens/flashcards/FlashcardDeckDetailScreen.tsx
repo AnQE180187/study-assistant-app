@@ -19,7 +19,7 @@ import {
   deleteFlashcard,
   generateFlashcardsFromNote,
 } from "../../services/flashcardService";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 type FlashcardStackParamList = {
   FlashcardDeckDetail: { noteId: string; title: string };
@@ -54,7 +54,7 @@ const FlashcardDeckDetailScreen: React.FC = () => {
       const cards = await getFlashcardsByNote(noteId);
       setFlashcards(cards);
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải flashcards");
+      Alert.alert(t("flashcards.error"), t("flashcards.loading"));
       console.error("Error loading flashcards:", error);
     } finally {
       setLoading(false);
@@ -73,10 +73,10 @@ const FlashcardDeckDetailScreen: React.FC = () => {
   };
 
   const handleDelete = (flashcard: Flashcard) => {
-    Alert.alert("Xóa flashcard", "Bạn có chắc chắn muốn xóa flashcard này?", [
-      { text: "Hủy", style: "cancel" },
+    Alert.alert(t("flashcards.deleteCard"), t("flashcards.confirmDeleteCard"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Xóa",
+        text: t("common.delete"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -84,9 +84,9 @@ const FlashcardDeckDetailScreen: React.FC = () => {
             setFlashcards((prev) =>
               prev.filter((card) => card.id !== flashcard.id)
             );
-            Alert.alert("Thành công", "Đã xóa flashcard");
+            Alert.alert(t("flashcards.success"), t("flashcards.cardDeleted"));
           } catch (error) {
-            Alert.alert("Lỗi", "Không thể xóa flashcard");
+            Alert.alert(t("flashcards.error"), t("flashcards.error"));
           }
         },
       },
@@ -94,28 +94,27 @@ const FlashcardDeckDetailScreen: React.FC = () => {
   };
 
   const handleGenerateFromAI = () => {
-    Alert.alert(
-      t('flashcards.ai_title'),
-      t('flashcards.ai_confirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.confirm'),
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await generateFlashcardsFromNote(noteId);
-              await loadFlashcards();
-              Alert.alert(t('flashcards.success'), t('flashcards.ai_generate_success'));
-            } catch (error) {
-              Alert.alert(t('flashcards.error'), t('flashcards.ai_error'));
-            } finally {
-              setLoading(false);
-            }
-          },
+    Alert.alert(t("flashcards.ai_title"), t("flashcards.ai_confirm"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.confirm"),
+        onPress: async () => {
+          try {
+            setLoading(true);
+            await generateFlashcardsFromNote(noteId);
+            await loadFlashcards();
+            Alert.alert(
+              t("flashcards.success"),
+              t("flashcards.ai_generate_success")
+            );
+          } catch (error) {
+            Alert.alert(t("flashcards.error"), t("flashcards.ai_error"));
+          } finally {
+            setLoading(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
   const handleCreateManual = () => {
     navigation.navigate("CreateFlashcard", {
@@ -126,7 +125,7 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
   const handlePractice = () => {
     if (flashcards.length === 0) {
-      Alert.alert(t('common.info'), t('flashcards.noFlashcards'));
+      Alert.alert(t("common.info"), t("flashcards.noFlashcards"));
       return;
     }
     navigation.navigate("FlashcardPractice", {
@@ -153,20 +152,22 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>{t('flashcards.noFlashcards')}</Text>
-      <Text style={styles.emptySubtitle}>{t('flashcards.emptySubtitle')}</Text>
+      <Text style={styles.emptyTitle}>{t("flashcards.noFlashcards")}</Text>
+      <Text style={styles.emptySubtitle}>{t("flashcards.emptySubtitle")}</Text>
       <View style={styles.emptyActions}>
         <TouchableOpacity
           style={styles.createButton}
           onPress={handleCreateManual}
         >
-          <Text style={styles.createButtonText}>{t('flashcards.createManual')}</Text>
+          <Text style={styles.createButtonText}>
+            {t("flashcards.createManual")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.aiButton}
           onPress={handleGenerateFromAI}
         >
-          <Text style={styles.aiButtonText}>{t('flashcards.createAI')}</Text>
+          <Text style={styles.aiButtonText}>{t("flashcards.createAI")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -177,14 +178,14 @@ const FlashcardDeckDetailScreen: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← {t('common.back')}</Text>
+            <Text style={styles.backButton}>← {t("common.back")}</Text>
           </TouchableOpacity>
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
         </View>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+          <Text style={styles.loadingText}>{t("common.loading")}</Text>
         </View>
       </View>
     );
@@ -202,7 +203,9 @@ const FlashcardDeckDetailScreen: React.FC = () => {
 
       <View style={styles.mainOptions}>
         <TouchableOpacity style={styles.optionButton} onPress={handlePractice}>
-          <Text style={styles.optionButtonText}>{t('flashcards.studyMode')}</Text>
+          <Text style={styles.optionButtonText}>
+            {t("flashcards.studyMode")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.optionButton}
@@ -213,12 +216,14 @@ const FlashcardDeckDetailScreen: React.FC = () => {
             });
           }}
         >
-          <Text style={styles.optionButtonText}>{t('flashcards.manageFlashcards')}</Text>
+          <Text style={styles.optionButtonText}>
+            {t("flashcards.manageFlashcards")}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.editButton} onPress={handleCreateManual}>
-        <Text style={styles.editButtonText}>{t('common.edit')}</Text>
+        <Text style={styles.editButtonText}>{t("common.edit")}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -12,15 +12,24 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import ModalCard from '../../components/ModalCard';
-import { getFlashcardsByDeck, createFlashcard, updateFlashcard, deleteFlashcard, Flashcard } from '../../services/flashcardService';
-import { COLORS } from '../../constants/themes';
-import { useTranslation } from 'react-i18next';
+import ModalCard from "../../components/ModalCard";
+import {
+  getFlashcardsByDeck,
+  createFlashcard,
+  updateFlashcard,
+  deleteFlashcard,
+  Flashcard,
+} from "../../services/flashcardService";
+import { COLORS } from "../../constants/themes";
+import { useTranslation } from "react-i18next";
 
 type FlashcardStackParamList = {
   FlashcardManagement: { deckId: string; title: string };
 };
-type NavigationProp = StackNavigationProp<FlashcardStackParamList, "FlashcardManagement">;
+type NavigationProp = StackNavigationProp<
+  FlashcardStackParamList,
+  "FlashcardManagement"
+>;
 type RouteProps = RouteProp<FlashcardStackParamList, "FlashcardManagement">;
 
 const FlashcardManagementScreen: React.FC = () => {
@@ -32,8 +41,14 @@ const FlashcardManagementScreen: React.FC = () => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [operationLoading, setOperationLoading] = useState(false);
-  const [modal, setModal] = useState<{ type: 'add' | 'edit' | 'delete' | null, index?: number }>({ type: null });
-  const [temp, setTemp] = useState<{ term: string; definition: string }>({ term: '', definition: '' });
+  const [modal, setModal] = useState<{
+    type: "add" | "edit" | "delete" | null;
+    index?: number;
+  }>({ type: null });
+  const [temp, setTemp] = useState<{ term: string; definition: string }>({
+    term: "",
+    definition: "",
+  });
 
   useEffect(() => {
     fetchFlashcards();
@@ -46,69 +61,84 @@ const FlashcardManagementScreen: React.FC = () => {
       const data = await getFlashcardsByDeck(deckId);
       setFlashcards(data);
     } catch (error: any) {
-      Alert.alert(t('flashcards.error'), error.message || t('flashcards.loadError'));
+      Alert.alert(
+        t("flashcards.error"),
+        error.message || t("flashcards.loadError")
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const openAdd = () => {
-    setTemp({ term: '', definition: '' });
-    setModal({ type: 'add' });
+    setTemp({ term: "", definition: "" });
+    setModal({ type: "add" });
   };
   const openEdit = (i: number) => {
     setTemp({ term: flashcards[i].term, definition: flashcards[i].definition });
-    setModal({ type: 'edit', index: i });
+    setModal({ type: "edit", index: i });
   };
-  const openDelete = (i: number) => setModal({ type: 'delete', index: i });
+  const openDelete = (i: number) => setModal({ type: "delete", index: i });
   const closeModal = () => setModal({ type: null });
 
   const handleAdd = async () => {
     if (!temp.term.trim() || !temp.definition.trim()) {
-      Alert.alert(t('flashcards.error'), t('flashcards.enterTermAndDefinition'));
+      Alert.alert(
+        t("flashcards.error"),
+        t("flashcards.enterTermAndDefinition")
+      );
       return;
     }
-    
+
     setOperationLoading(true);
     try {
-      await createFlashcard(deckId, { 
-        term: temp.term.trim(), 
-        definition: temp.definition.trim() 
+      await createFlashcard(deckId, {
+        term: temp.term.trim(),
+        definition: temp.definition.trim(),
       });
       await fetchFlashcards();
       closeModal();
-      Alert.alert(t('flashcards.success'), t('flashcards.addSuccess'));
+      Alert.alert(t("flashcards.success"), t("flashcards.addSuccess"));
     } catch (error: any) {
-      Alert.alert(t('flashcards.error'), error.message || t('flashcards.addError'));
+      Alert.alert(
+        t("flashcards.error"),
+        error.message || t("flashcards.addError")
+      );
     } finally {
       setOperationLoading(false);
     }
   };
-  
+
   const handleEdit = async () => {
     if (!temp.term.trim() || !temp.definition.trim()) {
-      Alert.alert(t('flashcards.error'), t('flashcards.enterTermAndDefinition'));
+      Alert.alert(
+        t("flashcards.error"),
+        t("flashcards.enterTermAndDefinition")
+      );
       return;
     }
-    
+
     if (modal.index !== undefined && flashcards[modal.index]) {
       setOperationLoading(true);
       try {
-        await updateFlashcard(flashcards[modal.index].id, { 
-          term: temp.term.trim(), 
-          definition: temp.definition.trim() 
+        await updateFlashcard(flashcards[modal.index].id, {
+          term: temp.term.trim(),
+          definition: temp.definition.trim(),
         });
         await fetchFlashcards();
         closeModal();
-        Alert.alert(t('flashcards.success'), t('flashcards.editSuccess'));
+        Alert.alert(t("flashcards.success"), t("flashcards.editSuccess"));
       } catch (error: any) {
-        Alert.alert(t('flashcards.error'), error.message || t('flashcards.editError'));
+        Alert.alert(
+          t("flashcards.error"),
+          error.message || t("flashcards.editError")
+        );
       } finally {
         setOperationLoading(false);
       }
     }
   };
-  
+
   const handleDelete = async () => {
     if (modal.index !== undefined && flashcards[modal.index]) {
       setOperationLoading(true);
@@ -116,16 +146,25 @@ const FlashcardManagementScreen: React.FC = () => {
         await deleteFlashcard(flashcards[modal.index].id);
         await fetchFlashcards();
         closeModal();
-        Alert.alert(t('flashcards.success'), t('flashcards.deleteSuccess'));
+        Alert.alert(t("flashcards.success"), t("flashcards.deleteSuccess"));
       } catch (error: any) {
-        Alert.alert(t('flashcards.error'), error.message || t('flashcards.deleteError'));
+        Alert.alert(
+          t("flashcards.error"),
+          error.message || t("flashcards.deleteError")
+        );
       } finally {
         setOperationLoading(false);
       }
     }
   };
 
-  const renderFlashcard = ({ item, index }: { item: Flashcard; index: number }) => (
+  const renderFlashcard = ({
+    item,
+    index,
+  }: {
+    item: Flashcard;
+    index: number;
+  }) => (
     <TouchableOpacity
       style={styles.flashcardItem}
       onPress={() => openEdit(index)}
@@ -137,8 +176,15 @@ const FlashcardManagementScreen: React.FC = () => {
         <TouchableOpacity onPress={() => openEdit(index)}>
           <Ionicons name="create-outline" size={20} color={COLORS.primary} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => openDelete(index)} style={{ marginLeft: 16 }}>
-          <Ionicons name="trash-outline" size={20} color={COLORS.error || 'red'} />
+        <TouchableOpacity
+          onPress={() => openDelete(index)}
+          style={{ marginLeft: 16 }}
+        >
+          <Ionicons
+            name="trash-outline"
+            size={20}
+            color={COLORS.error || "red"}
+          />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -146,9 +192,16 @@ const FlashcardManagementScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>{t('flashcards.loading')}</Text>
+        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>
+          {t("flashcards.loading")}
+        </Text>
       </View>
     );
   }
@@ -159,24 +212,44 @@ const FlashcardManagementScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1}>{title}</Text>
-        <TouchableOpacity onPress={() => (navigation as any).navigate('FlashcardPractice', { deckId, title })}>
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
+        <TouchableOpacity
+          onPress={() =>
+            (navigation as any).navigate("FlashcardPractice", { deckId, title })
+          }
+        >
           <Ionicons name="play" size={24} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity style={styles.addButton} onPress={openAdd} disabled={operationLoading}>
-        <Text style={styles.addButtonText}>{t('add new Flashcard')}</Text>
+
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={openAdd}
+        disabled={operationLoading}
+      >
+        <Text style={styles.addButtonText}>{t("Add new flashcard")}</Text>
       </TouchableOpacity>
-      
+
       {flashcards.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Ionicons name="document-text-outline" size={64} color={COLORS.textSecondary} />
-          <Text style={{ marginTop: 16, color: COLORS.textSecondary, fontSize: 16 }}>
-            {t('no Flashcards')}
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Ionicons
+            name="document-text-outline"
+            size={64}
+            color={COLORS.textSecondary}
+          />
+          <Text
+            style={{ marginTop: 16, color: COLORS.textSecondary, fontSize: 16 }}
+          >
+            {t("no Flashcards")}
           </Text>
           <TouchableOpacity style={styles.createFirstBtn} onPress={openAdd}>
-            <Text style={styles.createFirstText}>{t('add First Flashcard')}</Text>
+            <Text style={styles.createFirstText}>
+              {t("add First Flashcard")}
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -190,42 +263,62 @@ const FlashcardManagementScreen: React.FC = () => {
           onRefresh={fetchFlashcards}
         />
       )}
-      
-      {/* Modal cho Thêm/Sửa/Xóa flashcard */}
+
+      {/* Modal for Add/Edit/Delete flashcard */}
       <ModalCard
-        visible={modal.type === 'add'}
+        visible={modal.type === "add"}
         type="add"
-        title={t('flashcards.addFlashcard')}
+        title={t("flashcards.addFlashcard")}
         fields={[
-          { label: t('flashcards.term'), value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
-          { label: t('flashcards.definition'), value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
+          {
+            label: t("flashcards.term"),
+            value: temp.term,
+            onChange: (v) => setTemp((t) => ({ ...t, term: v })),
+          },
+          {
+            label: t("flashcards.definition"),
+            value: temp.definition,
+            onChange: (v) => setTemp((t) => ({ ...t, definition: v })),
+            multiline: true,
+          },
         ]}
         onSubmit={handleAdd}
         onCancel={closeModal}
       />
       <ModalCard
-        visible={modal.type === 'edit'}
+        visible={modal.type === "edit"}
         type="edit"
-        title={t('flashcards.editFlashcard')}
+        title={t("flashcards.editFlashcard")}
         fields={[
-          { label: t('flashcards.term'), value: temp.term, onChange: v => setTemp(t => ({ ...t, term: v })) },
-          { label: t('flashcards.definition'), value: temp.definition, onChange: v => setTemp(t => ({ ...t, definition: v })), multiline: true },
+          {
+            label: t("flashcards.term"),
+            value: temp.term,
+            onChange: (v) => setTemp((t) => ({ ...t, term: v })),
+          },
+          {
+            label: t("flashcards.definition"),
+            value: temp.definition,
+            onChange: (v) => setTemp((t) => ({ ...t, definition: v })),
+            multiline: true,
+          },
         ]}
         onSubmit={handleEdit}
         onCancel={closeModal}
       />
       <ModalCard
-        visible={modal.type === 'delete'}
+        visible={modal.type === "delete"}
         type="delete"
-        title={t('flashcards.deleteFlashcard')}
+        title={t("flashcards.deleteFlashcard")}
         onSubmit={handleDelete}
         onCancel={closeModal}
       />
-      
+
       {operationLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={{ marginTop: 8, color: COLORS.textSecondary }}>{t('common.loading')}</Text>
+          <Text style={{ marginTop: 8, color: COLORS.textSecondary }}>
+            {t("common.loading")}
+          </Text>
         </View>
       )}
     </View>
@@ -304,19 +397,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   createFirstText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
   loadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
