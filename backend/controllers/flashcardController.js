@@ -1,6 +1,9 @@
-const prisma = require('../config/prismaClient');
-const { generateFlashcardsFromGemini, sendFlashcardsToInternalAPI } = require('../services/geminiAgent');
-const { createAiLog } = require('./aiLogController');
+const prisma = require("../config/prismaClient");
+const {
+  generateFlashcardsFromGemini,
+  sendFlashcardsToInternalAPI,
+} = require("../services/geminiAgent");
+const { createAiLog } = require("./aiLogController");
 
 // @desc    Create a new flashcard in a deck
 // @route   POST /api/decks/:deckId/flashcards
@@ -10,21 +13,23 @@ const createFlashcard = async (req, res) => {
     const { term, definition } = req.body;
     const { deckId } = req.params;
     const userId = req.user.id;
-    
+
     // Kiểm tra deck có tồn tại và user có quyền tạo flashcard không
     const deck = await prisma.deck.findUnique({
       where: { id: deckId },
-      select: { userId: true }
+      select: { userId: true },
     });
-    
+
     if (!deck) {
-      return res.status(404).json({ message: 'Deck not found' });
+      return res.status(404).json({ message: "Deck not found" });
     }
-    
+
     if (deck.userId !== userId) {
-      return res.status(401).json({ message: 'Not authorized to create flashcards in this deck' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized to create flashcards in this deck" });
     }
-    
+
     const flashcard = await prisma.flashcard.create({
       data: { term, definition, deckId, userId },
     });
@@ -41,31 +46,32 @@ const getFlashcardsByDeck = async (req, res) => {
   try {
     const { deckId } = req.params;
     const userId = req.user.id;
-    
+
     // Kiểm tra deck có tồn tại và user có quyền xem không
     const deck = await prisma.deck.findUnique({
       where: { id: deckId },
-      select: { userId: true, isPublic: true }
+      select: { userId: true, isPublic: true },
     });
-    
+
     if (!deck) {
-      return res.status(404).json({ message: 'Deck not found' });
+      return res.status(404).json({ message: "Deck not found" });
     }
-    
+
     // Chỉ cho phép xem nếu là owner hoặc deck là public
     if (deck.userId !== userId && !deck.isPublic) {
-      return res.status(401).json({ message: 'Not authorized to view this deck' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized to view this deck" });
     }
-    
+
     // Nếu là owner, lấy tất cả flashcards trong deck
     // Nếu là public deck và không phải owner, chỉ lấy flashcards của owner
-    const whereClause = deck.userId === userId 
-      ? { deckId } 
-      : { deckId, userId: deck.userId };
-    
+    const whereClause =
+      deck.userId === userId ? { deckId } : { deckId, userId: deck.userId };
+
     const flashcards = await prisma.flashcard.findMany({
       where: whereClause,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     res.json(flashcards);
   } catch (error) {
@@ -75,14 +81,57 @@ const getFlashcardsByDeck = async (req, res) => {
 
 const getFlashcardsByDeckForAdmin = async (req, res) => {
   try {
+    // Check admin role
+    if (!req.user || req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Not authorized as admin" });
+    }
+
     const { deckId } = req.params;
+    console.log(`Admin fetching flashcards for deck: ${deckId}`);
+
+    // First check if deck exists
+    const deck = await prisma.deck.findUnique({
+      where: { id: deckId },
+      select: {
+        id: true,
+        name: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!deck) {
+      console.log(`Deck not found: ${deckId}`);
+      return res.status(404).json({ message: "Deck not found" });
+    }
+
     const flashcards = await prisma.flashcard.findMany({
       where: { deckId },
-      orderBy: { createdAt: 'desc' },
+      include: {
+        deck: {
+          select: {
+            name: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
     });
+
+    console.log(`Found ${flashcards.length} flashcards for deck ${deck.name}`);
     res.json(flashcards);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error fetching flashcards for admin:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -94,8 +143,10 @@ const getFlashcardById = async (req, res) => {
     const flashcard = await prisma.flashcard.findUnique({
       where: { id: req.params.id },
     });
-    if (!flashcard) return res.status(404).json({ message: 'Flashcard not found' });
-    if (flashcard.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (!flashcard)
+      return res.status(404).json({ message: "Flashcard not found" });
+    if (flashcard.userId !== req.user.id)
+      return res.status(401).json({ message: "Not authorized" });
     res.json(flashcard);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -108,9 +159,13 @@ const getFlashcardById = async (req, res) => {
 const updateFlashcard = async (req, res) => {
   try {
     const { term, definition } = req.body;
-    const flashcard = await prisma.flashcard.findUnique({ where: { id: req.params.id } });
-    if (!flashcard) return res.status(404).json({ message: 'Flashcard not found' });
-    if (flashcard.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    const flashcard = await prisma.flashcard.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!flashcard)
+      return res.status(404).json({ message: "Flashcard not found" });
+    if (flashcard.userId !== req.user.id)
+      return res.status(401).json({ message: "Not authorized" });
     const updatedFlashcard = await prisma.flashcard.update({
       where: { id: req.params.id },
       data: { term, definition },
@@ -126,11 +181,15 @@ const updateFlashcard = async (req, res) => {
 // @access  Private
 const deleteFlashcard = async (req, res) => {
   try {
-    const flashcard = await prisma.flashcard.findUnique({ where: { id: req.params.id } });
-    if (!flashcard) return res.status(404).json({ message: 'Flashcard not found' });
-    if (flashcard.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    const flashcard = await prisma.flashcard.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!flashcard)
+      return res.status(404).json({ message: "Flashcard not found" });
+    if (flashcard.userId !== req.user.id)
+      return res.status(401).json({ message: "Not authorized" });
     await prisma.flashcard.delete({ where: { id: req.params.id } });
-    res.json({ message: 'Flashcard removed' });
+    res.json({ message: "Flashcard removed" });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -143,20 +202,20 @@ const searchFlashcards = async (req, res) => {
   try {
     const { q } = req.query;
     const userId = req.user.id;
-    
+
     if (!q) {
-      return res.status(400).json({ message: 'Search query is required' });
+      return res.status(400).json({ message: "Search query is required" });
     }
 
     const flashcards = await prisma.flashcard.findMany({
       where: {
         userId,
         OR: [
-          { term: { contains: q, mode: 'insensitive' } },
-          { definition: { contains: q, mode: 'insensitive' } },
+          { term: { contains: q, mode: "insensitive" } },
+          { definition: { contains: q, mode: "insensitive" } },
         ],
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     res.json(flashcards);
   } catch (error) {
@@ -170,7 +229,7 @@ const searchFlashcards = async (req, res) => {
 const getFlashcardStats = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     const totalCards = await prisma.flashcard.count({
       where: { userId },
     });
@@ -182,7 +241,7 @@ const getFlashcardStats = async (req, res) => {
     // Get flashcards created in last 7 days
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    
+
     const recentActivity = await prisma.flashcard.count({
       where: {
         userId,
@@ -197,8 +256,8 @@ const getFlashcardStats = async (req, res) => {
     });
 
     const categoriesCount = {};
-    decks.forEach(deck => {
-      deck.tags.forEach(tag => {
+    decks.forEach((deck) => {
+      deck.tags.forEach((tag) => {
         categoriesCount[tag] = (categoriesCount[tag] || 0) + 1;
       });
     });
@@ -223,7 +282,9 @@ const bulkDeleteFlashcards = async (req, res) => {
     const userId = req.user.id;
 
     if (!ids || !Array.isArray(ids)) {
-      return res.status(400).json({ message: 'Flashcard IDs array is required' });
+      return res
+        .status(400)
+        .json({ message: "Flashcard IDs array is required" });
     }
 
     // Verify all flashcards belong to user
@@ -232,9 +293,13 @@ const bulkDeleteFlashcards = async (req, res) => {
       select: { id: true, userId: true },
     });
 
-    const unauthorizedCards = flashcards.filter(card => card.userId !== userId);
+    const unauthorizedCards = flashcards.filter(
+      (card) => card.userId !== userId
+    );
     if (unauthorizedCards.length > 0) {
-      return res.status(401).json({ message: 'Not authorized to delete some flashcards' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized to delete some flashcards" });
     }
 
     await prisma.flashcard.deleteMany({
@@ -256,14 +321,14 @@ const bulkUpdateFlashcards = async (req, res) => {
     const userId = req.user.id;
 
     if (!updates || !Array.isArray(updates)) {
-      return res.status(400).json({ message: 'Updates array is required' });
+      return res.status(400).json({ message: "Updates array is required" });
     }
 
     const updatedFlashcards = [];
-    
+
     for (const update of updates) {
       const { id, data } = update;
-      
+
       // Verify flashcard belongs to user
       const flashcard = await prisma.flashcard.findUnique({
         where: { id },
@@ -307,7 +372,7 @@ const exportFlashcards = async (req, res) => {
 
     const flashcards = await prisma.flashcard.findMany({
       where: whereClause,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     const exportData = JSON.stringify(flashcards, null, 2);
@@ -326,7 +391,7 @@ const importFlashcards = async (req, res) => {
     const userId = req.user.id;
 
     if (!data || !deckId) {
-      return res.status(400).json({ message: 'Data and deckId are required' });
+      return res.status(400).json({ message: "Data and deckId are required" });
     }
 
     // Verify deck belongs to user
@@ -336,7 +401,9 @@ const importFlashcards = async (req, res) => {
     });
 
     if (!deck || deck.userId !== userId) {
-      return res.status(401).json({ message: 'Not authorized to import to this deck' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized to import to this deck" });
     }
 
     const importedData = JSON.parse(data);
@@ -365,9 +432,13 @@ const importFlashcards = async (req, res) => {
 // @access  Private
 const toggleFlashcardPublic = async (req, res) => {
   try {
-    const flashcard = await prisma.flashcard.findUnique({ where: { id: req.params.id } });
-    if (!flashcard) return res.status(404).json({ message: 'Flashcard not found' });
-    if (flashcard.userId !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    const flashcard = await prisma.flashcard.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!flashcard)
+      return res.status(404).json({ message: "Flashcard not found" });
+    if (flashcard.userId !== req.user.id)
+      return res.status(401).json({ message: "Not authorized" });
     const updated = await prisma.flashcard.update({
       where: { id: req.params.id },
       data: { isPublic: !flashcard.isPublic },
@@ -385,7 +456,7 @@ const getPublicFlashcards = async (req, res) => {
   try {
     const flashcards = await prisma.flashcard.findMany({
       where: { isPublic: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     res.json(flashcards);
   } catch (error) {
@@ -403,11 +474,11 @@ const searchPublicFlashcards = async (req, res) => {
       where: {
         isPublic: true,
         OR: [
-          { term: { contains: query, mode: 'insensitive' } },
-          { definition: { contains: query, mode: 'insensitive' } },
+          { term: { contains: query, mode: "insensitive" } },
+          { definition: { contains: query, mode: "insensitive" } },
         ],
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     res.json(flashcards);
   } catch (error) {
@@ -421,26 +492,26 @@ const searchPublicFlashcards = async (req, res) => {
 const getPublicFlashcardsByDeck = async (req, res) => {
   try {
     const { deckId } = req.params;
-    
+
     // Kiểm tra deck có public không
     const deck = await prisma.deck.findUnique({
       where: { id: deckId },
-      select: { isPublic: true }
+      select: { isPublic: true },
     });
-    
+
     if (!deck) {
-      return res.status(404).json({ message: 'Deck not found' });
+      return res.status(404).json({ message: "Deck not found" });
     }
-    
+
     if (!deck.isPublic) {
-      return res.status(403).json({ message: 'This deck is not public' });
+      return res.status(403).json({ message: "This deck is not public" });
     }
-    
+
     const flashcards = await prisma.flashcard.findMany({
       where: { deckId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
-    
+
     res.json(flashcards);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -457,42 +528,67 @@ async function generateAndSaveFlashcards(req, res) {
   try {
     const { keyword, deckId, count, language } = req.body;
     const userId = req.user.id;
-    if (!keyword || !deckId) return res.status(400).json({ message: 'keyword và deckId là bắt buộc' });
+    if (!keyword || !deckId)
+      return res.status(400).json({ message: "keyword và deckId là bắt buộc" });
     // Kiểm tra quyền sở hữu deck
-    const deck = await prisma.deck.findUnique({ where: { id: deckId }, select: { userId: true } });
-    if (!deck) return res.status(404).json({ message: 'Deck not found' });
-    if (deck.userId !== userId) return res.status(401).json({ message: 'Not authorized' });
+    const deck = await prisma.deck.findUnique({
+      where: { id: deckId },
+      select: { userId: true },
+    });
+    if (!deck) return res.status(404).json({ message: "Deck not found" });
+    if (deck.userId !== userId)
+      return res.status(401).json({ message: "Not authorized" });
     // Lấy học vấn hiện tại của user
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { education: true } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { education: true },
+    });
     // Gọi Gemini
     let flashcards, geminiResponseText;
     try {
-      const { generateFlashcardsFromGemini } = require('../services/geminiAgent');
-      flashcards = await generateFlashcardsFromGemini(keyword, count, language, user?.education);
+      const {
+        generateFlashcardsFromGemini,
+      } = require("../services/geminiAgent");
+      flashcards = await generateFlashcardsFromGemini(
+        keyword,
+        count,
+        language,
+        user?.education
+      );
       geminiResponseText = JSON.stringify(flashcards);
     } catch (geminiErr) {
-      console.error('Gemini error:', geminiErr);
-      return res.status(500).json({ message: geminiErr.message || 'Gemini AI error' });
+      console.error("Gemini error:", geminiErr);
+      return res
+        .status(500)
+        .json({ message: geminiErr.message || "Gemini AI error" });
     }
     // Lưu log AI
     try {
       await createAiLog(userId, keyword, geminiResponseText);
     } catch (logErr) {
-      console.error('Lỗi lưu log AI:', logErr);
+      console.error("Lỗi lưu log AI:", logErr);
     }
     // Gửi từng flashcard vào API nội bộ
     let results;
     try {
-      const { sendFlashcardsToInternalAPI } = require('../services/geminiAgent');
-      results = await sendFlashcardsToInternalAPI(flashcards, deckId, req.headers.authorization?.replace('Bearer ', ''));
+      const {
+        sendFlashcardsToInternalAPI,
+      } = require("../services/geminiAgent");
+      results = await sendFlashcardsToInternalAPI(
+        flashcards,
+        deckId,
+        req.headers.authorization?.replace("Bearer ", "")
+      );
     } catch (apiErr) {
-      console.error('Internal API error:', apiErr);
-      return res.status(500).json({ message: 'Internal API error: ' + (apiErr.message || apiErr) });
+      console.error("Internal API error:", apiErr);
+      return res
+        .status(500)
+        .json({ message: "Internal API error: " + (apiErr.message || apiErr) });
     }
     res.json({ count: results.length, results });
   } catch (err) {
-    console.error('generateAndSaveFlashcards error:', err);
-    res.status(500).json({ message: err.message || 'Unknown error' });
+    console.error("generateAndSaveFlashcards error:", err);
+    res.status(500).json({ message: err.message || "Unknown error" });
   }
 }
 
@@ -514,4 +610,4 @@ module.exports = {
   getPublicFlashcardsByDeck,
   getFlashcardsByDeckForAdmin,
   generateAndSaveFlashcards,
-}; 
+};

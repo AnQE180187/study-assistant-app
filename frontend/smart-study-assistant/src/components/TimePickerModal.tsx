@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES } from '../constants/themes';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, SIZES } from "../constants/themes";
+import { useTranslation } from "react-i18next";
 
 interface TimePickerModalProps {
   visible: boolean;
@@ -23,9 +24,10 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
   visible,
   onClose,
   onConfirm,
-  initialStartTime = '09:00',
-  initialEndTime = '10:00',
+  initialStartTime = "09:00",
+  initialEndTime = "10:00",
 }) => {
+  const { t } = useTranslation();
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
 
@@ -33,7 +35,9 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
     const slots = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const timeString = `${hour.toString().padStart(2, "0")}:${minute
+          .toString()
+          .padStart(2, "0")}`;
         slots.push(timeString);
       }
     }
@@ -43,33 +47,36 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
   const timeSlots = generateTimeSlots();
 
   const handleConfirm = () => {
-    const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-    const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
-    
+    const startMinutes =
+      parseInt(startTime.split(":")[0]) * 60 +
+      parseInt(startTime.split(":")[1]);
+    const endMinutes =
+      parseInt(endTime.split(":")[0]) * 60 + parseInt(endTime.split(":")[1]);
+
     if (startMinutes >= endMinutes) {
-      Alert.alert('Lỗi', 'Thời gian kết thúc phải sau thời gian bắt đầu');
+      Alert.alert(t("common.error"), t("study_plan.endTimeAfterStart"));
       return;
     }
-    
+
     onConfirm(startTime, endTime);
     onClose();
   };
 
-  const TimeSelector = ({ 
-    title, 
-    time, 
-    onTimeChange, 
-    color 
-  }: { 
-    title: string; 
-    time: string; 
-    onTimeChange: (time: string) => void; 
+  const TimeSelector = ({
+    title,
+    time,
+    onTimeChange,
+    color,
+  }: {
+    title: string;
+    time: string;
+    onTimeChange: (time: string) => void;
     color: string;
   }) => (
     <View style={styles.timeSelector}>
       <Text style={styles.timeSelectorTitle}>{title}</Text>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.timeScrollContainer}
       >
@@ -78,14 +85,16 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
             key={slot}
             style={[
               styles.timeSlot,
-              time === slot && { backgroundColor: color, borderColor: color }
+              time === slot && { backgroundColor: color, borderColor: color },
             ]}
             onPress={() => onTimeChange(slot)}
           >
-            <Text style={[
-              styles.timeSlotText,
-              time === slot && styles.selectedTimeSlotText
-            ]}>
+            <Text
+              style={[
+                styles.timeSlotText,
+                time === slot && styles.selectedTimeSlotText,
+              ]}
+            >
               {slot}
             </Text>
           </TouchableOpacity>
@@ -104,7 +113,7 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <Text style={styles.title}>Chọn thời gian</Text>
+            <Text style={styles.title}>{t("study_plan.selectTime")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={COLORS.text} />
             </TouchableOpacity>
@@ -112,16 +121,16 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
 
           <View style={styles.content}>
             <TimeSelector
-              title="Thời gian bắt đầu"
+              title={t("study_plan.startTime")}
               time={startTime}
               onTimeChange={setStartTime}
               color={COLORS.primary}
             />
-            
+
             <View style={styles.divider} />
-            
+
             <TimeSelector
-              title="Thời gian kết thúc"
+              title={t("study_plan.endTime")}
               time={endTime}
               onTimeChange={setEndTime}
               color={COLORS.secondary}
@@ -131,8 +140,12 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
               <Text style={styles.durationTitle}>Thời lượng:</Text>
               <Text style={styles.durationText}>
                 {(() => {
-                  const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-                  const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+                  const startMinutes =
+                    parseInt(startTime.split(":")[0]) * 60 +
+                    parseInt(startTime.split(":")[1]);
+                  const endMinutes =
+                    parseInt(endTime.split(":")[0]) * 60 +
+                    parseInt(endTime.split(":")[1]);
                   const duration = endMinutes - startMinutes;
                   const hours = Math.floor(duration / 60);
                   const minutes = duration % 60;
@@ -144,10 +157,15 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Hủy</Text>
+              <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-              <Text style={styles.confirmButtonText}>Xác nhận</Text>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={handleConfirm}
+            >
+              <Text style={styles.confirmButtonText}>
+                {t("common.confirm")}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -159,26 +177,26 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContainer: {
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.text,
   },
   closeButton: {
@@ -192,7 +210,7 @@ const styles = StyleSheet.create({
   },
   timeSelectorTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.text,
     marginBottom: 12,
   },
@@ -211,11 +229,11 @@ const styles = StyleSheet.create({
   timeSlotText: {
     fontSize: 14,
     color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   selectedTimeSlotText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   divider: {
     height: 1,
@@ -223,9 +241,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   durationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 15,
     paddingHorizontal: 20,
     backgroundColor: COLORS.primaryLight,
@@ -234,16 +252,16 @@ const styles = StyleSheet.create({
   },
   durationTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.text,
   },
   durationText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
@@ -256,11 +274,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     marginRight: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.text,
   },
   confirmButton: {
@@ -270,13 +288,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: COLORS.primary,
     marginLeft: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   confirmButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
 });
 
-export default TimePickerModal; 
+export default TimePickerModal;

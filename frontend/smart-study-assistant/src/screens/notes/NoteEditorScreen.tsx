@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,19 +10,21 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES } from '../../constants/themes';
+} from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, SIZES } from "../../constants/themes";
 import {
   Note,
   getNoteById,
   updateNote,
   deleteNote,
-} from '../../services/notesService';
-import { useTranslation } from 'react-i18next';
-import { getStudyPlans, StudyPlan } from '../../services/studyPlanService';
-import { Picker } from '@react-native-picker/picker';
+} from "../../services/notesService";
+import { useTranslation } from "react-i18next";
+import { getStudyPlans, StudyPlan } from "../../services/studyPlanService";
+import { Picker } from "@react-native-picker/picker";
+import PrioritySelector from "../../components/PrioritySelector";
+import TagsInput from "../../components/TagsInput";
 
 interface RouteParams {
   noteId?: string;
@@ -33,15 +35,19 @@ const NoteEditorScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { noteId } = route.params as RouteParams;
-  
+
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [plans, setPlans] = useState<StudyPlan[]>([]);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [planId, setPlanId] = useState<string | null>(null);
+  const [priority, setPriority] = useState<
+    "low" | "medium" | "high" | "urgent"
+  >("medium");
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     fetchPlans();
@@ -59,7 +65,7 @@ const NoteEditorScreen: React.FC = () => {
 
   const loadNote = async () => {
     if (!noteId) return;
-    
+
     setLoading(true);
     try {
       const fetchedNote = await getNoteById(noteId);
@@ -67,8 +73,10 @@ const NoteEditorScreen: React.FC = () => {
       setTitle(fetchedNote.title);
       setContent(fetchedNote.content);
       setPlanId(fetchedNote.planId || null);
+      setPriority(fetchedNote.priority || "medium");
+      setTags(fetchedNote.tags || []);
     } catch (error: any) {
-      Alert.alert(t('notes.error'), error.message || t('notes.loadError'));
+      Alert.alert(t("notes.error"), error.message || t("notes.loadError"));
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -77,21 +85,23 @@ const NoteEditorScreen: React.FC = () => {
 
   const checkChanges = () => {
     if (!note) return true;
-    
+
     return (
       title !== note.title ||
       content !== note.content ||
-      planId !== note.planId
+      planId !== note.planId ||
+      priority !== (note.priority || "medium") ||
+      JSON.stringify(tags) !== JSON.stringify(note.tags || [])
     );
   };
 
   useEffect(() => {
     setHasChanges(checkChanges());
-  }, [title, content, planId]);
+  }, [title, content, planId, priority, tags]);
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      Alert.alert(t("notes.error"), t("notes.titleRequired"));
       return;
     }
     setSaving(true);
@@ -100,17 +110,19 @@ const NoteEditorScreen: React.FC = () => {
         title: title.trim(),
         content: content.trim(),
         planId: planId || null,
+        priority: priority,
+        tags: tags,
       };
       if (noteId) {
         await updateNote(noteId, noteData);
-        Alert.alert('Thành công', 'Đã cập nhật ghi chú');
+        Alert.alert(t("notes.success"), t("notes.editSuccess"));
       } else {
         // await createNote(noteData); // This line was removed as per the edit hint
-        Alert.alert('Thành công', 'Đã thêm ghi chú');
+        Alert.alert(t("notes.success"), t("notes.addSuccess"));
       }
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể lưu ghi chú');
+      Alert.alert(t("notes.error"), error.message || t("notes.editError"));
     } finally {
       setSaving(false);
     }
@@ -118,22 +130,26 @@ const NoteEditorScreen: React.FC = () => {
 
   const deleteNoteHandler = async () => {
     if (!noteId) return;
-    
+
     Alert.alert(
-      t('notes.deleteNote'),
-      t('notes.deleteConfirm') || 'Bạn có chắc chắn muốn xóa ghi chú này không?',
+      t("notes.deleteNote"),
+      t("notes.deleteConfirm") ||
+        "Bạn có chắc chắn muốn xóa ghi chú này không?",
       [
-        { text: t('common.cancel'), style: 'cancel' },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: t('common.confirm'),
-          style: 'destructive',
+          text: t("common.confirm"),
+          style: "destructive",
           onPress: async () => {
             try {
               await deleteNote(noteId);
-              Alert.alert(t('notes.success'), t('notes.deleteSuccess'));
+              Alert.alert(t("notes.success"), t("notes.deleteSuccess"));
               navigation.goBack();
             } catch (error: any) {
-              Alert.alert(t('notes.error'), error.message || t('notes.deleteError'));
+              Alert.alert(
+                t("notes.error"),
+                error.message || t("notes.deleteError")
+              );
             }
           },
         },
@@ -143,21 +159,26 @@ const NoteEditorScreen: React.FC = () => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return '#FF6B6B';
-      case 'medium': return '#FFA726';
-      case 'low': return '#66BB6A';
-      default: return COLORS.textSecondary;
+      case "high":
+        return "#FF6B6B";
+      case "medium":
+        return "#FFA726";
+      case "low":
+        return "#66BB6A";
+      default:
+        return COLORS.textSecondary;
     }
   };
 
   const handleBack = () => {
     if (hasChanges) {
       Alert.alert(
-        t('common.cancel'),
-        t('notes.unsavedChanges') || 'Bạn có thay đổi chưa lưu. Bạn có muốn thoát không?',
+        t("common.cancel"),
+        t("notes.unsavedChanges") ||
+          "Bạn có thay đổi chưa lưu. Bạn có muốn thoát không?",
         [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('common.confirm'), onPress: () => navigation.goBack() },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.confirm"), onPress: () => navigation.goBack() },
         ]
       );
     } else {
@@ -167,33 +188,43 @@ const NoteEditorScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>{t('notes.loading')}</Text>
+        <Text style={{ marginTop: 16, color: COLORS.textSecondary }}>
+          {t("notes.loading")}
+        </Text>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        
+
         <View style={styles.headerActions}>
           {noteId && (
-            <TouchableOpacity onPress={deleteNoteHandler} style={styles.actionBtn}>
+            <TouchableOpacity
+              onPress={deleteNoteHandler}
+              style={styles.actionBtn}
+            >
               <Ionicons name="trash-outline" size={24} color={COLORS.error} />
             </TouchableOpacity>
           )}
-          
-          <TouchableOpacity 
-            onPress={handleSave} 
+
+          <TouchableOpacity
+            onPress={handleSave}
             style={[styles.saveBtn, !hasChanges && styles.saveBtnDisabled]}
             disabled={!hasChanges || saving}
           >
@@ -209,37 +240,50 @@ const NoteEditorScreen: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <TextInput
           style={styles.titleInput}
-          placeholder="Tiêu đề ghi chú..."
+          placeholder={t("notes.ui.writeTitle")}
           value={title}
           onChangeText={setTitle}
           placeholderTextColor={COLORS.textSecondary}
         />
-        <View style={{ marginBottom: 16 }}>
-          <Text style={styles.metaLabel}>Môn học</Text>
-          <View style={{ borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, marginTop: 8 }}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("notes.ui.studyPlan")}</Text>
+          <View style={styles.pickerContainer}>
             <Picker
               selectedValue={planId}
               onValueChange={setPlanId}
-              style={{ height: 44 }}
+              style={styles.picker}
             >
-              <Picker.Item label="Tự do" value={null} />
-              {plans.map(plan => (
+              <Picker.Item label={t("notes.ui.freeNotes")} value={null} />
+              {plans.map((plan) => (
                 <Picker.Item key={plan.id} label={plan.title} value={plan.id} />
               ))}
             </Picker>
           </View>
         </View>
-        <View style={styles.contentSection}>
-          <Text style={styles.sectionTitle}>Nội dung</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("notes.ui.content")}</Text>
           <TextInput
             style={styles.contentInput}
-            placeholder="Viết nội dung ghi chú của bạn..."
+            placeholder={t("notes.ui.writeContent")}
             value={content}
             onChangeText={setContent}
             placeholderTextColor={COLORS.textSecondary}
             multiline
             textAlignVertical="top"
           />
+        </View>
+
+        {/* Priority Section */}
+        <View style={styles.section}>
+          <PrioritySelector
+            selectedPriority={priority}
+            onPriorityChange={setPriority}
+          />
+        </View>
+
+        {/* Tags Section */}
+        <View style={styles.section}>
+          <TagsInput tags={tags} onTagsChange={setTags} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -252,9 +296,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -265,8 +309,8 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   actionBtn: {
@@ -286,10 +330,16 @@ const styles = StyleSheet.create({
   },
   titleInput: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.text,
-    marginBottom: 16,
-    paddingVertical: 8,
+    marginBottom: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minHeight: 60,
   },
   descriptionInput: {
     fontSize: 16,
@@ -306,12 +356,12 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.text,
     marginBottom: 8,
   },
   priorityContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   priorityBtn: {
@@ -320,15 +370,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   priorityText: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   priorityTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   categoryBtn: {
     backgroundColor: COLORS.primaryLight,
@@ -343,23 +393,24 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   categoryTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   tagsSection: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.primary,
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
   tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginBottom: 12,
   },
@@ -368,17 +419,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   tagText: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   addTagContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   tagInput: {
@@ -395,15 +446,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: 8,
     padding: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   togglesSection: {
     marginBottom: 20,
   },
   toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 8,
     gap: 8,
   },
@@ -413,24 +464,42 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: COLORS.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
-  contentSection: {
-    marginBottom: 20,
+  section: {
+    marginBottom: 24,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  pickerContainer: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginTop: 8,
+  },
+  picker: {
+    height: 60,
+    fontSize: 16,
   },
   contentInput: {
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
     color: COLORS.text,
-    minHeight: 200,
+    minHeight: 150,
     borderWidth: 1,
     borderColor: COLORS.border,
+    marginTop: 8,
+    textAlignVertical: "top",
   },
   metaLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   addCategoryBtn: {
@@ -439,11 +508,11 @@ const styles = StyleSheet.create({
   addCategoryText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   categoryInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   categoryInput: {
@@ -460,12 +529,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: 8,
     padding: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   cancelCategoryBtn: {
     padding: 8,
   },
 });
 
-export default NoteEditorScreen; 
+export default NoteEditorScreen;

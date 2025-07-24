@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
-import CustomButton from '../../components/CustomButton';
-import { COLORS, SIZES } from '../../constants/themes';
-import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import CustomButton from "../../components/CustomButton";
+import { COLORS, SIZES } from "../../constants/themes";
+import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<any>();
   const { login } = useAuth();
@@ -18,7 +27,10 @@ const LoginScreen: React.FC = () => {
       await login(email, password);
       // Điều hướng sang app chính sẽ tự động nhờ context
     } catch (err: any) {
-      Alert.alert('Đăng nhập thất bại', err?.response?.data?.message || 'Sai tài khoản hoặc mật khẩu!');
+      Alert.alert(
+        t("auth.loginFailed"),
+        err?.response?.data?.message || t("auth.invalidCredentials")
+      );
     } finally {
       setLoading(false);
     }
@@ -26,10 +38,10 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Đăng nhập</Text>
+      <Text style={styles.title}>{t("auth.login")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder={t("auth.email")}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -37,28 +49,31 @@ const LoginScreen: React.FC = () => {
       />
       <TextInput
         style={styles.input}
-        placeholder="Mật khẩu"
+        placeholder={t("auth.password")}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
       <CustomButton
-        title={loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        title={loading ? t("auth.loggingIn") : t("auth.login")}
         onPress={handleLogin}
         disabled={loading}
         style={styles.loginBtn}
         textStyle={styles.loginBtnText}
       />
-      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgot}>
-        <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("ForgotPassword")}
+        style={styles.forgot}
+      >
+        <Text style={styles.forgotText}>{t("auth.forgotPassword")}</Text>
       </TouchableOpacity>
-      <Text style={styles.or}>Hoặc đăng nhập bằng</Text>
+      <Text style={styles.or}>{t("auth.orLoginWith")}</Text>
       <View style={styles.socialRow}>
         <CustomButton
           title="Google"
           type="secondary"
           icon="logo-google"
-          onPress={() => { }}
+          onPress={() => {}}
           style={styles.socialBtn}
           textStyle={styles.socialBtnText}
         />
@@ -66,15 +81,15 @@ const LoginScreen: React.FC = () => {
           title="Facebook"
           type="secondary"
           icon="logo-facebook"
-          onPress={() => { }}
+          onPress={() => {}}
           style={styles.socialBtn}
           textStyle={styles.socialBtnText}
         />
       </View>
       <View style={styles.bottomRow}>
-        <Text style={styles.bottomText}>Chưa có tài khoản?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.register}>Đăng ký</Text>
+        <Text style={styles.bottomText}>{t("auth.noAccount")}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.register}>{t("auth.register")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -84,19 +99,19 @@ const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLORS.background,
     padding: SIZES.padding,
   },
   title: {
     fontSize: 26,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginBottom: 24,
   },
   input: {
-    width: '100%',
+    width: "100%",
     backgroundColor: COLORS.card,
     borderRadius: SIZES.radius,
     padding: 16,
@@ -106,7 +121,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   forgot: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: 10,
   },
   forgotText: {
@@ -118,9 +133,9 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
     marginTop: 8,
     marginBottom: 8,
     gap: 10,
@@ -133,11 +148,11 @@ const styles = StyleSheet.create({
   },
   socialBtnText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.1,
   },
   loginBtn: {
-    width: '100%',
+    width: "100%",
     paddingVertical: 14,
     borderRadius: 14,
     marginBottom: 10,
@@ -145,11 +160,11 @@ const styles = StyleSheet.create({
   },
   loginBtnText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.2,
   },
   bottomRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 24,
   },
   bottomText: {
@@ -158,8 +173,8 @@ const styles = StyleSheet.create({
   },
   register: {
     color: COLORS.primary,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
-export default LoginScreen; 
+export default LoginScreen;

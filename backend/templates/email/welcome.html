@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng đến với {{appName}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .welcome-message h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-message p {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .features {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            color: white;
+        }
+        
+        .features h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .feature-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .feature-text {
+            flex: 1;
+        }
+        
+        .feature-text h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .feature-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .cta-section {
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .cta-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .cta-section p {
+            color: #555;
+            margin-bottom: 20px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .tips {
+            background-color: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .tips h3 {
+            color: #155724;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .tips ul {
+            margin-left: 20px;
+            color: #155724;
+        }
+        
+        .tips li {
+            margin-bottom: 8px;
+        }
+        
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .footer .app-name {
+            font-weight: bold;
+            color: #4facfe;
+        }
+        
+        .social-links {
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            color: #4facfe;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .welcome-message h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Chào mừng!</h1>
+            <p>Bạn đã tham gia {{appName}}</p>
+        </div>
+        
+        <div class="content">
+            <div class="welcome-message">
+                <h2>Xin chào {{name}}! 👋</h2>
+                <p>Cảm ơn bạn đã đăng ký tài khoản <strong>{{appName}}</strong>!</p>
+                <p>Chúng tôi rất vui mừng được chào đón bạn vào cộng đồng học tập thông minh của chúng tôi.</p>
+            </div>
+            
+            <div class="features">
+                <h3>🚀 Khám phá các tính năng tuyệt vời</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">📝</div>
+                        <div class="feature-text">
+                            <h4>Ghi chú thông minh</h4>
+                            <p>Tạo và quản lý ghi chú học tập một cách hiệu quả</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🃏</div>
+                        <div class="feature-text">
+                            <h4>Flashcards</h4>
+                            <p>Học từ vựng và kiến thức với phương pháp thẻ ghi nhớ</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-text">
+                            <h4>Theo dõi tiến độ</h4>
+                            <p>Giám sát quá trình học tập và đạt được mục tiêu</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🤖</div>
+                        <div class="feature-text">
+                            <h4>AI Hỗ trợ</h4>
+                            <p>Trợ lý AI thông minh giúp bạn học tập hiệu quả hơn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h3>Sẵn sàng bắt đầu?</h3>
+                <p>Hãy khám phá ứng dụng và bắt đầu hành trình học tập của bạn ngay hôm nay!</p>
+                <a href="#" class="cta-button">Bắt đầu học tập 🚀</a>
+            </div>
+            
+            <div class="tips">
+                <h3>💡 Mẹo để bắt đầu:</h3>
+                <ul>
+                    <li>Tạo ghi chú đầu tiên của bạn để làm quen với giao diện</li>
+                    <li>Khám phá tính năng Flashcards để ghi nhớ kiến thức</li>
+                    <li>Thiết lập mục tiêu học tập hàng ngày</li>
+                    <li>Sử dụng AI để được hỗ trợ khi gặp khó khăn</li>
+                </ul>
+            </div>
+            
+            <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với đội ngũ hỗ trợ của chúng tôi. Chúng tôi luôn sẵn sàng giúp đỡ!</p>
+            
+            <p style="margin-top: 20px;"><strong>Chúc bạn học tập vui vẻ và hiệu quả!</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Email này được gửi tự động từ <span class="app-name">{{appName}}</span></p>
+            <p>© {{currentYear}} {{appName}}. Tất cả quyền được bảo lưu.</p>
+            
+            <div class="social-links">
+                <a href="#">Chính sách bảo mật</a> |
+                <a href="#">Điều khoản sử dụng</a> |
+                <a href="#">Hỗ trợ</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -63,6 +63,17 @@ export type RootStackParamList = {
     email: string;
     otp: string;
   };
+
+  // Admin screens
+  AdminTabs: undefined;
+  AdminDashboard: undefined;
+  AdminUsers: undefined;
+  AdminFlashcards: undefined;
+  AdminFlashcardDeck: {
+    deckId: string;
+    title: string;
+  };
+  AdminAiLogs: undefined;
 };
 
 declare global {

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mã xác thực đăng ký</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .otp-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+        
+        .otp-label {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .otp-code {
+            background-color: white;
+            color: #2c3e50;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 10px;
+            letter-spacing: 8px;
+            display: inline-block;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .expiry-info {
+            color: white;
+            font-size: 14px;
+            margin-top: 15px;
+            opacity: 0.9;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .security-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .security-notice h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .security-notice p {
+            color: #856404;
+            font-size: 14px;
+        }
+        
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .footer .app-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .social-links {
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .otp-code {
+                font-size: 24px;
+                letter-spacing: 4px;
+                padding: 12px 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 {{appName}}</h1>
+            <p>Xác thực tài khoản của bạn</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Xin chào! 👋
+            </div>
+            
+            <p>Cảm ơn bạn đã đăng ký tài khoản <strong>{{appName}}</strong>. Để hoàn tất quá trình đăng ký, vui lòng sử dụng mã xác thực bên dưới:</p>
+            
+            <div class="otp-section">
+                <div class="otp-label">MÃ XÁC THỰC CỦA BẠN</div>
+                <div class="otp-code">{{otp}}</div>
+                <div class="expiry-info">⏰ Mã có hiệu lực trong {{expiryMinutes}} phút</div>
+            </div>
+            
+            <div class="instructions">
+                <h3>📋 Hướng dẫn sử dụng:</h3>
+                <ul>
+                    <li>Nhập mã xác thực vào ứng dụng để hoàn tất đăng ký</li>
+                    <li>Mã chỉ có thể sử dụng một lần duy nhất</li>
+                    <li>Nếu mã hết hạn, bạn có thể yêu cầu gửi lại mã mới</li>
+                </ul>
+            </div>
+            
+            <div class="security-notice">
+                <h3>🔒 Lưu ý bảo mật:</h3>
+                <p>Không chia sẻ mã này với bất kỳ ai. Đội ngũ {{appName}} sẽ không bao giờ yêu cầu bạn cung cấp mã xác thực qua điện thoại hoặc email.</p>
+            </div>
+            
+            <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này hoặc liên hệ với chúng tôi.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Email này được gửi tự động từ <span class="app-name">{{appName}}</span></p>
+            <p>© {{currentYear}} {{appName}}. Tất cả quyền được bảo lưu.</p>
+            
+            <div class="social-links">
+                <a href="#">Chính sách bảo mật</a> |
+                <a href="#">Điều khoản sử dụng</a> |
+                <a href="#">Hỗ trợ</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
