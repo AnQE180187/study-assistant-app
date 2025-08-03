@@ -13,14 +13,14 @@ const { protect, admin } = require("../middlewares/authMiddleware");
 
 router.use(protect);
 
-router.route("/").post(createNote).get(getNotes);
-
-router.route("/:id").get(getNoteById).put(updateNote).delete(deleteNote);
-
-// Route cho admin lấy tất cả notes
-router.get("/all", protect, admin, getAllNotesAdmin);
+// Route cho admin lấy tất cả notes (phải đặt trước /:id)
+router.get("/all", admin, getAllNotesAdmin);
 
 // Route cho tag suggestions
 router.get("/tags/suggestions", getTagSuggestions);
+
+router.route("/").post(createNote).get(getNotes);
+
+router.route("/:id").get(getNoteById).put(updateNote).delete(deleteNote);
 
 module.exports = router;

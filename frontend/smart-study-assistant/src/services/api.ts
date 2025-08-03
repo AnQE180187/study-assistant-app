@@ -3,6 +3,12 @@ import { Platform } from "react-native";
 
 // Auto-detect the best API URL based on environment
 const getApiBaseUrl = () => {
+  // Use environment variable if available
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    console.log("🌐 Using env API URL:", process.env.EXPO_PUBLIC_API_URL);
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
   // For production, use production server
   if (__DEV__ === false) {
     return "https://study-assitant-app-backend.onrender.com/api";

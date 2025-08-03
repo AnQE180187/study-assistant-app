@@ -43,7 +43,7 @@ model User {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   email         String       @unique
-  password      String
+  password      String?      // Make password optional for Google users
   role          UserRole        @default(USER)
   avatar        String?         // URL to avatar image
   dateOfBirth   DateTime?       // Date of birth
@@ -53,6 +53,8 @@ model User {
   theme         String       @default("light") // light, dark
   resetPasswordToken String?
   resetPasswordExpires DateTime?
+  googleId      String?      // Google OAuth ID
+  isEmailVerified Boolean    @default(false) // Email verification status
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   notes         Note[]
