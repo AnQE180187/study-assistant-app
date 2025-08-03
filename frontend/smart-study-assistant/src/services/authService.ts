@@ -7,6 +7,7 @@ export interface AuthResponse {
   email: string;
   role: string;
   token: string;
+  avatar?: string;
 }
 
 export const login = async (
@@ -23,6 +24,13 @@ export const register = async (
   password: string
 ): Promise<AuthResponse> => {
   const res = await api.post("/users", { name, email, password });
+  return res.data;
+};
+
+export const loginWithGoogle = async (
+  accessToken: string
+): Promise<AuthResponse> => {
+  const res = await api.post("/users/google-login", { accessToken });
   return res.data;
 };
 

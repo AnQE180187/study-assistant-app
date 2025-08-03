@@ -10,11 +10,6 @@ const createAiLog = async (userId, prompt, response) => {
 // Lấy toàn bộ log AI (chỉ admin)
 const getAiLogs = async (req, res) => {
   try {
-    // Check admin role
-    if (!req.user || req.user.role !== "ADMIN") {
-      return res.status(403).json({ message: "Not authorized as admin" });
-    }
-
     const { userId, search, date, page = 1, limit = 20 } = req.query;
     const where = {};
 
@@ -50,8 +45,10 @@ const getAiLogs = async (req, res) => {
       prisma.aiLog.count({ where }),
     ]);
 
-    res.json({ logs, total, page: parseInt(page), limit: parseInt(limit) });
+    // Return just the logs array for frontend compatibility
+    res.json(logs);
   } catch (error) {
+    console.error("Error in getAiLogs:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -59,11 +56,6 @@ const getAiLogs = async (req, res) => {
 // Xóa log AI (admin)
 const deleteAiLog = async (req, res) => {
   try {
-    // Check admin role
-    if (!req.user || req.user.role !== "ADMIN") {
-      return res.status(403).json({ message: "Not authorized as admin" });
-    }
-
     await prisma.aiLog.delete({ where: { id: req.params.id } });
     res.json({ message: "AI log deleted" });
   } catch (error) {

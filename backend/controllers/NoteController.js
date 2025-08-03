@@ -67,15 +67,17 @@ const getNoteById = async (req, res) => {
 // @access  Private/Admin
 const getAllNotesAdmin = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Not authorized as admin" });
-    }
     const notes = await prisma.note.findMany({
       orderBy: { createdAt: "desc" },
-      include: { plan: true, user: { select: { name: true, email: true } } },
+      include: {
+        plan: true,
+        user: { select: { name: true, email: true } },
+      },
     });
+
     res.json(notes);
   } catch (error) {
+    console.error("Error in getAllNotesAdmin:", error);
     res.status(500).json({ message: error.message });
   }
 };

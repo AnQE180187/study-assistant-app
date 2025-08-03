@@ -5,7 +5,6 @@ import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthNavigator from "./AuthNavigator";
 import AppNavigator from "./AppNavigator";
-import AdminNavigator from "./AdminNavigator";
 import OnboardingScreen from "../screens/onboarding/OnboardingScreen";
 import { useAuth } from "../contexts/AuthContext";
 import FlashcardPracticeScreen from "../screens/flashcards/FlashcardPracticeScreen";
@@ -14,6 +13,7 @@ import FlashcardDeckDetailScreen from "../screens/flashcards/FlashcardDeckDetail
 import StudyPlanScreen from "../screens/planner/StudyPlanScreen";
 import NotesListScreen from "../screens/notes/NotesListScreen";
 import NoteEditorScreen from "../screens/notes/NoteEditorScreen";
+import PaymentScreen from "../screens/payment/PaymentScreen";
 
 const RootStack = createStackNavigator();
 
@@ -23,8 +23,6 @@ const RootNavigator = () => {
     null
   );
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
-
-  const isAdmin = user?.role === "ADMIN" || user?.role === "admin";
 
   // 🔁 Optimized onboarding status checker
   const checkOnboardingStatus = useCallback(async () => {
@@ -96,7 +94,6 @@ const RootNavigator = () => {
   console.log("🎬 RootNavigator Render:", {
     hasSeenOnboarding,
     token,
-    isAdmin,
   });
 
   return (
@@ -106,11 +103,7 @@ const RootNavigator = () => {
           <RootStack.Screen name="Onboarding" component={OnboardingScreen} />
         ) : token ? (
           <>
-            {isAdmin ? (
-              <RootStack.Screen name="Admin" component={AdminNavigator} />
-            ) : (
-              <RootStack.Screen name="App" component={AppNavigator} />
-            )}
+            <RootStack.Screen name="App" component={AppNavigator} />
             <RootStack.Screen
               name="FlashcardPractice"
               component={FlashcardPracticeScreen}
@@ -132,6 +125,7 @@ const RootNavigator = () => {
               component={NotesListScreen}
             />
             <RootStack.Screen name="NoteEditor" component={NoteEditorScreen} />
+            <RootStack.Screen name="Payment" component={PaymentScreen} />
           </>
         ) : (
           <RootStack.Screen name="Auth" component={AuthNavigator} />

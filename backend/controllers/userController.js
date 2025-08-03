@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const prisma = require("../config/prismaClient");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -669,6 +670,77 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+// @desc    Google Login
+// @route   POST /api/users/google-login
+// @access  Public
+const googleLogin = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({ message: "Access token is required" });
+    }
+
+    // Verify Google access token
+    const googleResponse = await axios.get(
+      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
+    );
+
+    const { id: googleId, email, name, picture } = googleResponse.data;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "Unable to get email from Google" });
+    }
+
+    // Check if user exists
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (user) {
+      // User exists, update Google info if needed
+      if (!user.googleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            googleId,
+            avatar: picture,
+          },
+        });
+      }
+    } else {
+      // Create new user
+      user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          googleId,
+          avatar: picture,
+          role: "USER",
+          isEmailVerified: true, // Google accounts are pre-verified
+        },
+      });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      token: generateToken(user.id),
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    res.status(500).json({
+      message: "Google login failed",
+      error: error.response?.data?.error_description || error.message,
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -684,4 +756,5 @@ module.exports = {
   getAdminStats,
   deleteUser,
   updateUserRole,
+  googleLogin,
 };

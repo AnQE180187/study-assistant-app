@@ -25,6 +25,7 @@ import { getStudyPlans, StudyPlan } from "../../services/studyPlanService";
 import { Picker } from "@react-native-picker/picker";
 import PrioritySelector from "../../components/PrioritySelector";
 import TagsInput from "../../components/TagsInput";
+import VoiceInput from "../../components/VoiceInput";
 
 interface RouteParams {
   noteId?: string;
@@ -271,6 +272,18 @@ const NoteEditorScreen: React.FC = () => {
             multiline
             textAlignVertical="top"
           />
+
+          {/* Voice Input */}
+          <View style={styles.voiceInputContainer}>
+            <VoiceInput
+              onResult={(text) => {
+                setContent((prev) => (prev ? `${prev}\n\n${text}` : text));
+              }}
+              placeholder="Nhấn để nói nội dung"
+              language="vi-VN"
+              style={styles.voiceInputButton}
+            />
+          </View>
         </View>
 
         {/* Priority Section */}
@@ -496,6 +509,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     marginTop: 8,
     textAlignVertical: "top",
+  },
+  voiceInputContainer: {
+    marginTop: 12,
+    alignItems: "center",
+  },
+  voiceInputButton: {
+    minWidth: 200,
   },
   metaLabelRow: {
     flexDirection: "row",

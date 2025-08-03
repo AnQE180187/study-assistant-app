@@ -15,6 +15,7 @@ const {
   getAdminStats,
   deleteUser,
   updateUserRole,
+  googleLogin,
 } = require("../controllers/userController");
 const {
   sendOtp,
@@ -26,6 +27,7 @@ const emailService = require("../services/emailService");
 // Public routes
 router.post("/", registerUser);
 router.post("/login", loginUser);
+router.post("/google-login", googleLogin);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp-forgot", verifyOtpForgot);
 router.post("/reset-password", resetPassword);

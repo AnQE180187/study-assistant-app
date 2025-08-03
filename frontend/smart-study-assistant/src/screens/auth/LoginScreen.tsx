@@ -7,19 +7,32 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
 import CustomButton from "../../components/CustomButton";
 import { COLORS, SIZES } from "../../constants/themes";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
+WebBrowser.maybeCompleteAuthSession();
+
 const LoginScreen: React.FC = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigation = useNavigation<any>();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
+
+  // Google OAuth configuration
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  });
 
   const handleLogin = async () => {
     setLoading(true);
@@ -33,6 +46,27 @@ const LoginScreen: React.FC = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await promptAsync();
+      if (result?.type === "success") {
+        const { authentication } = result;
+        if (authentication?.accessToken) {
+          // Call your backend API to authenticate with Google token
+          await loginWithGoogle(authentication.accessToken);
+        }
+      }
+    } catch (error) {
+      Alert.alert(
+        t("auth.loginFailed"),
+        "Đăng nhập Google thất bại. Vui lòng thử lại."
+      );
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -70,10 +104,11 @@ const LoginScreen: React.FC = () => {
       <Text style={styles.or}>{t("auth.orLoginWith")}</Text>
       <View style={styles.socialRow}>
         <CustomButton
-          title="Google"
+          title={googleLoading ? "Đang đăng nhập..." : "Google"}
           type="secondary"
           icon="logo-google"
-          onPress={() => {}}
+          onPress={handleGoogleLogin}
+          disabled={googleLoading}
           style={styles.socialBtn}
           textStyle={styles.socialBtnText}
         />

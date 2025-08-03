@@ -23,6 +23,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (accessToken: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -100,6 +101,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       Alert.alert(
         "Lỗi đăng nhập",
         error.message || "Có lỗi xảy ra khi đăng nhập"
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (accessToken: string) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.loginWithGoogle(accessToken);
+
+      setToken(response.token);
+      setUser({
+        id: response.id,
+        email: response.email,
+        name: response.name,
+        avatar: response.avatar,
+        role: response.role || "USER",
+        language: "en",
+        theme: "light",
+        createdAt: new Date().toISOString(),
+      });
+
+      await AsyncStorage.setItem("token", response.token);
+      await AsyncStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: response.id,
+          email: response.email,
+          name: response.name,
+          avatar: response.avatar,
+          role: response.role || "USER",
+          language: "en",
+          theme: "light",
+          createdAt: new Date().toISOString(),
+        })
+      );
+    } catch (error: any) {
+      Alert.alert(
+        "Lỗi đăng nhập Google",
+        error.message || "Có lỗi xảy ra khi đăng nhập với Google"
       );
       throw error;
     } finally {
@@ -210,6 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         token,
         isLoading,
         login,
+        loginWithGoogle,
         register,
         forgotPassword,
         logout,
